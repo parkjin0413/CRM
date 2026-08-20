@@ -72,11 +72,15 @@ export async function createCustomer(
   return { status: 'created', customer: mapRowToCustomer(data as CustomerRow) }
 }
 
-export async function updateCustomer(id: string, input: CustomerInput): Promise<void> {
+export type UpdateCustomerResult =
+  | { status: 'ok' }
+  | { status: 'invalid'; errors: ValidationError[] }
+
+export async function updateCustomer(id: string, input: CustomerInput): Promise<UpdateCustomerResult> {
   const sourceOptions = await getSourceOptions()
   const errors = validateCustomerInput(input, sourceOptions)
   if (errors.length > 0) {
-    throw new Error(errors.map((e) => e.message).join(', '))
+    return { status: 'invalid', errors }
   }
 
   const supabase = getSupabaseServerClient()
@@ -95,6 +99,7 @@ export async function updateCustomer(id: string, input: CustomerInput): Promise<
 
   if (error) throw new Error(error.message)
   revalidatePath('/')
+  return { status: 'ok' }
 }
 
 export async function deleteCustomer(id: string): Promise<void> {

@@ -34,7 +34,11 @@ export function CustomerForm({
 
     startTransition(async () => {
       if (mode === 'edit' && customerId) {
-        await updateCustomer(customerId, values)
+        const result = await updateCustomer(customerId, values)
+        if (result.status === 'invalid') {
+          setFieldErrors(Object.fromEntries(result.errors.map((e) => [e.field, e.message])))
+          return
+        }
         router.push('/')
         return
       }
