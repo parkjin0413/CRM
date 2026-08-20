@@ -33,6 +33,21 @@ create table customers (
 create index customers_phone_normalized_idx on customers (phone_normalized);
 create index customers_created_at_idx on customers (created_at);
 
+create table contact_logs (
+  id uuid primary key default gen_random_uuid(),
+  customer_id uuid not null references customers (id) on delete cascade,
+  contacted_at date not null,
+  method text not null,
+  note text,
+  created_at timestamptz not null default now()
+);
+
+create index contact_logs_customer_id_idx on contact_logs (customer_id);
+create index contact_logs_contacted_at_idx on contact_logs (contacted_at);
+
+alter table contact_logs enable row level security;
+-- No policies: service role only, same as the other tables.
+
 create or replace function set_updated_at()
 returns trigger as $$
 begin

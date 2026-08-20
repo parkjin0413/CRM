@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { sortCustomers, filterCustomers, type SortField, type SortDirection } from '@/lib/customers/list'
 import { deleteCustomer } from '@/lib/customers/actions'
 import { formatPhone } from '@/lib/customers/phone'
+import { formatRelativeDays } from '@/lib/customers/relative-time'
 import type { Customer } from '@/lib/customers/types'
 import { SourceTag } from './source-tag'
 import { SourceFilterDropdown } from './source-filter-dropdown'
@@ -147,6 +148,12 @@ export function CustomerListClient({
                     <dt className="w-12 shrink-0 text-ink-muted">등록일</dt>
                     <dd className="font-mono text-[13px] text-ink-muted">{formatDate(customer.createdAt)}</dd>
                   </div>
+                  <div className="flex gap-2">
+                    <dt className="w-12 shrink-0 text-ink-muted">마지막 연락</dt>
+                    <dd className="text-ink-muted">
+                      {customer.lastContactedAt ? formatRelativeDays(customer.lastContactedAt) : '기록 없음'}
+                    </dd>
+                  </div>
                 </dl>
                 <div className="mt-3 flex gap-3 border-t border-line pt-3">
                   <Link href={`/customers/${customer.id}/edit`} className="btn-link text-sm">
@@ -180,6 +187,9 @@ export function CustomerListClient({
                       {sortField === field ? (sortDirection === 'asc' ? ' ▲' : ' ▼') : ''}
                     </th>
                   ))}
+                  <th className="whitespace-nowrap border-b border-line px-3 py-2.5 text-left text-xs font-medium text-ink-muted">
+                    마지막 연락
+                  </th>
                   <th className="border-b border-line px-3 py-2.5" />
                 </tr>
               </thead>
@@ -213,6 +223,9 @@ export function CustomerListClient({
                     <td className="max-w-48 truncate px-3 py-2.5 text-ink-muted">{customer.memo ?? ''}</td>
                     <td className="px-3 py-2.5 font-mono text-[13px] text-ink-muted">
                       {formatDate(customer.createdAt)}
+                    </td>
+                    <td className="whitespace-nowrap px-3 py-2.5 text-ink-muted">
+                      {customer.lastContactedAt ? formatRelativeDays(customer.lastContactedAt) : '기록 없음'}
                     </td>
                     <td className="whitespace-nowrap px-3 py-2.5">
                       <Link href={`/customers/${customer.id}`} className="btn-link mr-3 text-sm">

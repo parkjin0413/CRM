@@ -1,11 +1,13 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { getCustomers, attachBusinessCardUrls } from '@/lib/customers/actions'
+import { getContactLogs } from '@/lib/customers/contact-log-actions'
 import { formatPhone } from '@/lib/customers/phone'
 import { AppHeader } from '@/components/app-header'
 import { SourceTag } from '@/components/source-tag'
 import { FavoriteToggle } from '@/components/favorite-toggle'
 import { DeleteCustomerButton } from '@/components/delete-customer-button'
+import { ContactLogSection } from '@/components/contact-log-section'
 
 function formatDateTime(iso: string) {
   return new Intl.DateTimeFormat('ko-KR', {
@@ -20,7 +22,7 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
   const customers = await getCustomers()
   const customer = customers.find((c) => c.id === id)
   if (!customer) notFound()
-  const [withCard] = await attachBusinessCardUrls([customer])
+  const [[withCard], logs] = await Promise.all([attachBusinessCardUrls([customer]), getContactLogs(customer.id)])
 
   return (
     <main className="mx-auto max-w-2xl p-6">
@@ -84,6 +86,10 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
           <dt className="text-ink-muted">수정일</dt>
           <dd className="font-mono text-[13px] text-ink-muted">{formatDateTime(customer.updatedAt)}</dd>
         </dl>
+      </div>
+
+      <div className="mt-4">
+        <ContactLogSection customerId={customer.id} initialLogs={logs} />
       </div>
 
       <Link href="/" className="btn-link mt-4 inline-block text-sm">

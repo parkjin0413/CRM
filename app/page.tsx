@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { getCustomers, getSourceOptions, attachBusinessCardUrls } from '@/lib/customers/actions'
+import { attachLastContactedDates } from '@/lib/customers/contact-log-actions'
 import { CustomerListClient } from '@/components/customer-list-client'
 import { AppHeader } from '@/components/app-header'
 
@@ -7,7 +8,8 @@ export const dynamic = 'force-dynamic'
 
 export default async function HomePage() {
   const [rawCustomers, sourceOptions] = await Promise.all([getCustomers(), getSourceOptions()])
-  const customers = await attachBusinessCardUrls(rawCustomers)
+  const withCards = await attachBusinessCardUrls(rawCustomers)
+  const customers = await attachLastContactedDates(withCards)
 
   return (
     <main className="mx-auto max-w-6xl p-6">
