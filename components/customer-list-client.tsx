@@ -54,15 +54,13 @@ export function CustomerListClient({
 
   const visible = useMemo(() => {
     const filtered = filterCustomers(customers, { sources: selectedSources, search })
-    const sorted =
-      sortField === 'contactCount'
-        ? [...filtered].sort((a, b) => {
-            const diff = (a.contactCount ?? 0) - (b.contactCount ?? 0)
-            return sortDirection === 'asc' ? diff : -diff
-          })
-        : sortCustomers(filtered, sortField, sortDirection)
-    // Stable sort: keeps the chosen sort order within each group, just floats favorites up.
-    return [...sorted].sort((a, b) => Number(b.isFavorite) - Number(a.isFavorite))
+    if (sortField === 'contactCount') {
+      return [...filtered].sort((a, b) => {
+        const diff = (a.contactCount ?? 0) - (b.contactCount ?? 0)
+        return sortDirection === 'asc' ? diff : -diff
+      })
+    }
+    return sortCustomers(filtered, sortField, sortDirection)
   }, [customers, selectedSources, search, sortField, sortDirection])
 
   const exportHref = useMemo(() => {
@@ -162,6 +160,15 @@ export function CustomerListClient({
       {visible.length > 0 && (
         <>
           {/* Mobile: stacked cards. Hidden from sm: up, where the table takes over. */}
+          <label className="mb-2 flex w-fit items-center gap-2 text-sm text-ink-muted sm:hidden">
+            <input
+              type="checkbox"
+              checked={allVisibleSelected}
+              onChange={toggleSelectAllVisible}
+              className="accent-accent"
+            />
+            전체 선택 ({visible.length})
+          </label>
           <ul className="flex flex-col gap-3 sm:hidden">
             {visible.map((customer) => (
               <li key={customer.id} className="card p-4">
@@ -242,7 +249,7 @@ export function CustomerListClient({
             <table className="w-full min-w-max border-collapse text-sm">
               <thead>
                 <tr>
-                  <th className="border-b border-line px-3 py-2.5">
+                  <th className="border-b border-line py-2 pl-3 pr-1.5">
                     <input
                       type="checkbox"
                       checked={allVisibleSelected}
@@ -251,12 +258,12 @@ export function CustomerListClient({
                       aria-label="현재 목록 전체 선택"
                     />
                   </th>
-                  <th className="border-b border-line px-3 py-2.5" />
+                  <th className="border-b border-line px-1.5 py-2" />
                   {COLUMNS.map(({ field, label }) => (
                     <th
                       key={field}
                       onClick={() => toggleSort(field)}
-                      className="cursor-pointer whitespace-nowrap border-b border-line px-3 py-2.5 text-left text-xs font-medium text-ink-muted hover:text-ink"
+                      className="cursor-pointer whitespace-nowrap border-b border-line px-2.5 py-2 text-left text-xs font-medium text-ink-muted hover:text-ink"
                     >
                       {label}
                       {sortField === field ? (sortDirection === 'asc' ? ' ▲' : ' ▼') : ''}
@@ -264,18 +271,18 @@ export function CustomerListClient({
                   ))}
                   <th
                     onClick={() => toggleSort('contactCount')}
-                    className="cursor-pointer whitespace-nowrap border-b border-line px-3 py-2.5 text-left text-xs font-medium text-ink-muted hover:text-ink"
+                    className="cursor-pointer whitespace-nowrap border-b border-line px-2.5 py-2 text-left text-xs font-medium text-ink-muted hover:text-ink"
                   >
                     마지막 연락
                     {sortField === 'contactCount' ? (sortDirection === 'asc' ? ' ▲' : ' ▼') : ''}
                   </th>
-                  <th className="border-b border-line px-3 py-2.5" />
+                  <th className="border-b border-line px-2 py-2" />
                 </tr>
               </thead>
               <tbody>
                 {visible.map((customer) => (
                   <tr key={customer.id} className="border-b border-line last:border-0 hover:bg-paper">
-                    <td className="px-3 py-2.5">
+                    <td className="py-2 pl-3 pr-1.5">
                       <input
                         type="checkbox"
                         checked={selectedIds.has(customer.id)}
@@ -284,22 +291,22 @@ export function CustomerListClient({
                         aria-label={`${customer.name} 선택`}
                       />
                     </td>
-                    <td className="px-3 py-2.5">
+                    <td className="px-1.5 py-2">
                       <FavoriteToggle id={customer.id} initialValue={customer.isFavorite} />
                     </td>
-                    <td className="px-3 py-2.5">
+                    <td className="px-2.5 py-2">
                       <SourceTag value={customer.source} />
                     </td>
-                    <td className="px-3 py-2.5">{customer.company}</td>
-                    <td className="px-3 py-2.5">
+                    <td className="max-w-28 truncate px-2.5 py-2">{customer.company}</td>
+                    <td className="px-2.5 py-2">
                       <BusinessCardPreview name={customer.name} imageUrl={customer.businessCardUrl} />
                     </td>
-                    <td className="px-3 py-2.5">
+                    <td className="px-2.5 py-2">
                       <a href={`tel:${customer.phoneNormalized}`} className="btn-link font-mono text-[13px]">
                         {formatPhone(customer.phoneNormalized)}
                       </a>
                     </td>
-                    <td className="px-3 py-2.5 text-ink-muted">
+                    <td className="max-w-36 truncate px-2.5 py-2 text-ink-muted">
                       {customer.email ? (
                         <a href={`mailto:${customer.email}`} className="btn-link">
                           {customer.email}
@@ -308,18 +315,18 @@ export function CustomerListClient({
                         ''
                       )}
                     </td>
-                    <td className="max-w-48 truncate px-3 py-2.5 text-ink-muted">{customer.memo ?? ''}</td>
-                    <td className="px-3 py-2.5 font-mono text-[13px] text-ink-muted">
+                    <td className="max-w-32 truncate px-2.5 py-2 text-ink-muted">{customer.memo ?? ''}</td>
+                    <td className="px-2.5 py-2 font-mono text-[13px] text-ink-muted">
                       {formatDate(customer.createdAt)}
                     </td>
-                    <td className="whitespace-nowrap px-3 py-2.5 text-ink-muted">
+                    <td className="whitespace-nowrap px-2.5 py-2 text-ink-muted">
                       <ContactHistoryPreview label={lastContactLabel(customer)} logs={customer.recentContactLogs} />
                     </td>
-                    <td className="whitespace-nowrap px-3 py-2.5">
-                      <Link href={`/customers/${customer.id}`} className="btn-link mr-3 text-sm">
+                    <td className="whitespace-nowrap px-2.5 py-2">
+                      <Link href={`/customers/${customer.id}`} className="btn-link mr-2 text-sm">
                         상세
                       </Link>
-                      <Link href={`/customers/${customer.id}/edit`} className="btn-link mr-3 text-sm">
+                      <Link href={`/customers/${customer.id}/edit`} className="btn-link mr-2 text-sm">
                         수정
                       </Link>
                       <button

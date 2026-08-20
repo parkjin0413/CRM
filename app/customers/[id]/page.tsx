@@ -47,7 +47,7 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
           <img
             src={withCard.businessCardUrl}
             alt={`${customer.name} 명함`}
-            className="max-w-xs rounded-md border border-line object-contain"
+            className="max-w-full rounded-md border border-line object-contain sm:max-w-xs"
           />
         )}
 

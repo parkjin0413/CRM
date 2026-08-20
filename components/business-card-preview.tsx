@@ -24,7 +24,7 @@ export function BusinessCardPreview({ name, imageUrl }: { name: string; imageUrl
         <img
           src={imageUrl}
           alt={`${name} 명함`}
-          className="max-h-56 max-w-64 rounded object-contain sm:max-w-72"
+          className="max-h-56 max-w-[calc(100vw-2rem)] rounded object-contain sm:max-w-72"
         />
       }
     />
