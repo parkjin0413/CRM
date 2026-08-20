@@ -17,6 +17,7 @@ export function filterCustomers(
   { sources, search }: { sources: string[]; search: string }
 ): Customer[] {
   const query = search.trim().toLowerCase()
+  const normalizedQuery = query.replace(/\D/g, '')
   return customers.filter((c) => {
     const matchesSource = sources.length === 0 || sources.includes(c.source)
     const matchesSearch =
@@ -24,6 +25,7 @@ export function filterCustomers(
       c.name.toLowerCase().includes(query) ||
       c.company.toLowerCase().includes(query) ||
       c.phone.toLowerCase().includes(query) ||
+      (normalizedQuery !== '' && c.phoneNormalized.includes(normalizedQuery)) ||
       (c.email ?? '').toLowerCase().includes(query)
     return matchesSource && matchesSearch
   })

@@ -22,6 +22,7 @@ export function CustomerForm({
   )
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [duplicate, setDuplicate] = useState<Customer | null>(null)
+  const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
   function update<K extends keyof CustomerInput>(key: K, value: CustomerInput[K]) {
@@ -31,28 +32,33 @@ export function CustomerForm({
   async function submit(force: boolean) {
     setFieldErrors({})
     setDuplicate(null)
+    setError(null)
 
     startTransition(async () => {
-      if (mode === 'edit' && customerId) {
-        const result = await updateCustomer(customerId, values)
+      try {
+        if (mode === 'edit' && customerId) {
+          const result = await updateCustomer(customerId, values)
+          if (result.status === 'invalid') {
+            setFieldErrors(Object.fromEntries(result.errors.map((e) => [e.field, e.message])))
+            return
+          }
+          router.push('/')
+          return
+        }
+
+        const result = await createCustomer(values, { force })
         if (result.status === 'invalid') {
           setFieldErrors(Object.fromEntries(result.errors.map((e) => [e.field, e.message])))
           return
         }
+        if (result.status === 'duplicate') {
+          setDuplicate(result.existing)
+          return
+        }
         router.push('/')
-        return
+      } catch (e) {
+        setError(e instanceof Error ? e.message : '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.')
       }
-
-      const result = await createCustomer(values, { force })
-      if (result.status === 'invalid') {
-        setFieldErrors(Object.fromEntries(result.errors.map((e) => [e.field, e.message])))
-        return
-      }
-      if (result.status === 'duplicate') {
-        setDuplicate(result.existing)
-        return
-      }
-      router.push('/')
     })
   }
 
@@ -136,12 +142,15 @@ export function CustomerForm({
           <button
             type="button"
             onClick={() => submit(true)}
+            disabled={isPending}
             className="mt-2 rounded bg-black px-3 py-1 text-white"
           >
             그래도 등록
           </button>
         </div>
       )}
+
+      {error && <p className="text-sm text-red-600">{error}</p>}
 
       <button type="submit" disabled={isPending} className="rounded bg-black px-3 py-2 text-white">
         {mode === 'create' ? '등록' : '저장'}

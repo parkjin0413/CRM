@@ -49,8 +49,24 @@ describe('sortCustomers', () => {
 
 describe('filterCustomers', () => {
   const list = [
-    customer({ id: '1', source: '웹사이트', name: '김철수', company: 'A사', phone: '010-1111-1111', email: 'a@x.com' }),
-    customer({ id: '2', source: '지인소개', name: '박영희', company: 'B사', phone: '010-2222-2222', email: 'b@x.com' }),
+    customer({
+      id: '1',
+      source: '웹사이트',
+      name: '김철수',
+      company: 'A사',
+      phone: '010-1111-1111',
+      phoneNormalized: '01011111111',
+      email: 'a@x.com',
+    }),
+    customer({
+      id: '2',
+      source: '지인소개',
+      name: '박영희',
+      company: 'B사',
+      phone: '010-2222-2222',
+      phoneNormalized: '01022222222',
+      email: 'b@x.com',
+    }),
   ]
 
   it('returns all rows when no sources or search are given', () => {
@@ -68,5 +84,9 @@ describe('filterCustomers', () => {
 
   it('combines source filter and search with AND', () => {
     expect(filterCustomers(list, { sources: ['웹사이트'], search: '박영희' }).map((c) => c.id)).toEqual([])
+  })
+
+  it('matches a digits-only query against the normalized phone', () => {
+    expect(filterCustomers(list, { sources: [], search: '01011111111' }).map((c) => c.id)).toEqual(['1'])
   })
 })
