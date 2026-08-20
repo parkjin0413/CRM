@@ -8,15 +8,22 @@ export function CustomerImportClient() {
   const router = useRouter()
   const [file, setFile] = useState<File | null>(null)
   const [result, setResult] = useState<BulkImportResult | null>(null)
+  const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
   function handleUpload() {
     if (!file) return
+    setError(null)
+    setResult(null)
     const formData = new FormData()
     formData.set('file', file)
     startTransition(async () => {
-      const res = await bulkImportCustomers(formData)
-      setResult(res)
+      try {
+        const res = await bulkImportCustomers(formData)
+        setResult(res)
+      } catch (e) {
+        setError(e instanceof Error ? e.message : '업로드 중 오류가 발생했습니다.')
+      }
     })
   }
 
@@ -34,6 +41,8 @@ export function CustomerImportClient() {
       >
         업로드 및 미리보기
       </button>
+
+      {error && <p className="text-sm text-red-600">{error}</p>}
 
       {result && (
         <div className="rounded border border-gray-300 p-3 text-sm">
