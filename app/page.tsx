@@ -14,7 +14,7 @@ export default async function HomePage() {
   return (
     <main className="mx-auto max-w-6xl p-6">
       <AppHeader
-        title="고객 목록"
+        title="CRM 시스템"
         actions={
           <>
             <Link href="/customers/new" className="btn-primary">

@@ -1,5 +1,4 @@
 import { login } from './actions'
-import { SealMark } from '@/components/seal-mark'
 
 export default async function LoginPage({
   searchParams,
@@ -10,8 +9,9 @@ export default async function LoginPage({
 
   return (
     <main className="mx-auto mt-28 flex max-w-xs flex-col items-center">
-      <SealMark className="mb-3" />
-      <h1 className="mb-6 text-lg font-semibold text-ink">고객 CRM</h1>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/logo.png" alt="KANGSAN 고객 관리" width={40} height={40} className="mb-3" />
+      <h1 className="mb-6 text-lg font-semibold text-ink">KANGSAN 고객 관리</h1>
       <form action={login} className="card flex w-full flex-col gap-3 p-6">
         <input type="hidden" name="from" value={from ?? '/'} />
         <input type="password" name="password" placeholder="비밀번호" required className="input" autoFocus />

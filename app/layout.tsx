@@ -18,8 +18,8 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "고객 CRM",
-  description: "개인 고객 관리 CRM",
+  title: "KANGSAN 고객 관리",
+  description: "KANGSAN 고객 관리 CRM 시스템",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
