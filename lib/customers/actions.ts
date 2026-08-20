@@ -196,6 +196,28 @@ export async function deleteCustomer(id: string): Promise<void> {
   revalidatePath('/')
 }
 
+export async function deleteCustomerBulk(customerIds: string[]): Promise<{ count: number }> {
+  if (customerIds.length === 0) return { count: 0 }
+
+  const supabase = getSupabaseServerClient()
+  const { data: existing } = await supabase
+    .from('customers')
+    .select('business_card_path')
+    .in('id', customerIds)
+  const { error } = await supabase.from('customers').delete().in('id', customerIds)
+  if (error) throw new Error(error.message)
+
+  const paths = (existing ?? [])
+    .map((row) => row.business_card_path as string | null)
+    .filter((p): p is string => !!p)
+  if (paths.length > 0) {
+    await supabase.storage.from(BUSINESS_CARD_BUCKET).remove(paths)
+  }
+
+  revalidatePath('/')
+  return { count: customerIds.length }
+}
+
 export type SourceOptionResult =
   | { status: 'ok' }
   | { status: 'error'; message: string }

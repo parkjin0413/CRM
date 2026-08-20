@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { addContactLogBulk } from '@/lib/customers/contact-log-actions'
-import { updateSourceBulk } from '@/lib/customers/actions'
+import { updateSourceBulk, deleteCustomerBulk } from '@/lib/customers/actions'
 import { CONTACT_METHODS } from '@/lib/customers/contact-log'
 
 function todayLocalDate() {
@@ -42,6 +42,19 @@ export function BulkActionsBar({
     })
   }
 
+  function handleDelete() {
+    if (!confirm(`선택한 ${selectedIds.length}명의 고객 정보를 삭제할까요? 되돌릴 수 없습니다.`)) return
+    setError(null)
+    startTransition(async () => {
+      try {
+        await deleteCustomerBulk(selectedIds)
+        onDone()
+      } catch (e) {
+        setError(e instanceof Error ? e.message : '일괄 삭제 중 오류가 발생했습니다.')
+      }
+    })
+  }
+
   function handleChangeSource() {
     if (!newSource) return
     if (!confirm(`선택한 ${selectedIds.length}명의 구분을 "${newSource}"(으)로 변경할까요?`)) return
@@ -60,9 +73,14 @@ export function BulkActionsBar({
     <div className="card sticky top-4 z-10 mb-4 flex flex-col gap-3 p-3">
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium text-ink">{selectedIds.length}명 선택됨</p>
-        <button type="button" onClick={onClear} className="text-xs text-ink-muted hover:text-ink hover:underline">
-          선택 해제
-        </button>
+        <div className="flex items-center gap-3">
+          <button type="button" onClick={onClear} className="text-xs text-ink-muted hover:text-ink hover:underline">
+            선택 해제
+          </button>
+          <button type="button" onClick={handleDelete} disabled={isPending} className="text-xs text-stamp hover:underline disabled:opacity-50">
+            고객 삭제
+          </button>
+        </div>
       </div>
 
       <div className="flex flex-wrap items-end gap-2 border-t border-line pt-3">
