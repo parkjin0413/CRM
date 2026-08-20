@@ -2,6 +2,8 @@ import Link from 'next/link'
 import { getCustomers, getSourceOptions } from '@/lib/customers/actions'
 import { CustomerListClient } from '@/components/customer-list-client'
 
+export const dynamic = 'force-dynamic'
+
 export default async function HomePage() {
   const [customers, sourceOptions] = await Promise.all([getCustomers(), getSourceOptions()])
 
@@ -18,9 +20,6 @@ export default async function HomePage() {
           </Link>
           <a href="/api/customers/template" className="rounded border border-gray-300 px-3 py-2 text-sm">
             양식 다운로드
-          </a>
-          <a href="/api/customers/export" className="rounded border border-gray-300 px-3 py-2 text-sm">
-            엑셀 내보내기
           </a>
           <Link href="/settings/sources" className="rounded border border-gray-300 px-3 py-2 text-sm">
             구분 관리

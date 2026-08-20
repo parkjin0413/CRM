@@ -1,6 +1,8 @@
 import { getSourceOptions } from '@/lib/customers/actions'
 import { CustomerForm } from '@/components/customer-form'
 
+export const dynamic = 'force-dynamic'
+
 export default async function NewCustomerPage() {
   const sourceOptions = await getSourceOptions()
   return (

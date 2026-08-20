@@ -120,11 +120,12 @@ export async function addSourceOption(value: string): Promise<SourceOptionResult
   }
 
   const supabase = getSupabaseServerClient()
-  const { data: last } = await supabase
+  const { data: last, error: lookupError } = await supabase
     .from('source_options')
     .select('sort_order')
     .order('sort_order', { ascending: false })
     .limit(1)
+  if (lookupError) throw new Error(lookupError.message)
   const nextOrder = (last?.[0]?.sort_order ?? 0) + 1
 
   const { error } = await supabase.from('source_options').insert({ value: trimmed, sort_order: nextOrder })

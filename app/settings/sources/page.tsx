@@ -1,6 +1,8 @@
 import { getSourceOptions } from '@/lib/customers/actions'
 import { SourceOptionsClient } from '@/components/source-options-client'
 
+export const dynamic = 'force-dynamic'
+
 export default async function SourceSettingsPage() {
   const options = await getSourceOptions()
   return (

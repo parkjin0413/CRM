@@ -28,12 +28,21 @@ export function CustomerListClient({
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
   const [selectedSources, setSelectedSources] = useState<string[]>([])
   const [search, setSearch] = useState('')
+  const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
   const visible = useMemo(() => {
     const filtered = filterCustomers(customers, { sources: selectedSources, search })
     return sortCustomers(filtered, sortField, sortDirection)
   }, [customers, selectedSources, search, sortField, sortDirection])
+
+  const exportHref = useMemo(() => {
+    const params = new URLSearchParams()
+    if (selectedSources.length > 0) params.set('sources', selectedSources.join(','))
+    if (search.trim() !== '') params.set('search', search.trim())
+    const query = params.toString()
+    return query ? `/api/customers/export?${query}` : '/api/customers/export'
+  }, [selectedSources, search])
 
   function toggleSort(field: SortField) {
     if (field === sortField) {
@@ -52,9 +61,14 @@ export function CustomerListClient({
 
   function handleDelete(id: string) {
     if (!confirm('이 고객 정보를 삭제할까요?')) return
+    setError(null)
     startTransition(async () => {
-      await deleteCustomer(id)
-      setCustomers((prev) => prev.filter((c) => c.id !== id))
+      try {
+        await deleteCustomer(id)
+        setCustomers((prev) => prev.filter((c) => c.id !== id))
+      } catch (e) {
+        setError(e instanceof Error ? e.message : '삭제 중 오류가 발생했습니다.')
+      }
     })
   }
 
@@ -80,7 +94,12 @@ export function CustomerListClient({
             </label>
           ))}
         </div>
+        <a href={exportHref} className="rounded border border-gray-300 px-3 py-2 text-sm">
+          엑셀 내보내기
+        </a>
       </div>
+
+      {error && <p className="mb-3 text-sm text-red-600">{error}</p>}
 
       <table className="w-full border-collapse text-sm">
         <thead>
@@ -107,7 +126,9 @@ export function CustomerListClient({
               <td className="px-2 py-2">{customer.phone}</td>
               <td className="px-2 py-2">{customer.email ?? ''}</td>
               <td className="px-2 py-2">{customer.memo ?? ''}</td>
-              <td className="px-2 py-2">{new Date(customer.createdAt).toLocaleDateString('ko-KR')}</td>
+              <td className="px-2 py-2">
+                {new Intl.DateTimeFormat('ko-KR', { timeZone: 'Asia/Seoul' }).format(new Date(customer.createdAt))}
+              </td>
               <td className="px-2 py-2">
                 <Link href={`/customers/${customer.id}/edit`} className="mr-2 text-blue-600">
                   수정

@@ -7,10 +7,11 @@ import { generateAuthToken } from '@/lib/auth/token'
 export async function login(formData: FormData) {
   const password = formData.get('password')?.toString() ?? ''
   const from = formData.get('from')?.toString() || '/'
+  const safeFrom = from.startsWith('/') && !from.startsWith('//') ? from : '/'
   const secret = process.env.SITE_PASSWORD
 
   if (!secret || password !== secret) {
-    redirect(`/login?error=1&from=${encodeURIComponent(from)}`)
+    redirect(`/login?error=1&from=${encodeURIComponent(safeFrom)}`)
   }
 
   const token = generateAuthToken(secret)
@@ -22,5 +23,5 @@ export async function login(formData: FormData) {
     maxAge: 60 * 60 * 24 * 30,
     path: '/',
   })
-  redirect(from)
+  redirect(safeFrom)
 }
