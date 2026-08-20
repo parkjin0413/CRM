@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import { getCustomers, getSourceOptions } from '@/lib/customers/actions'
 import { CustomerForm } from '@/components/customer-form'
+import { AppHeader } from '@/components/app-header'
 
 export default async function EditCustomerPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -9,8 +10,8 @@ export default async function EditCustomerPage({ params }: { params: Promise<{ i
   if (!customer) notFound()
 
   return (
-    <main className="mx-auto max-w-md p-6">
-      <h1 className="mb-4 text-xl font-semibold">고객 정보 수정</h1>
+    <main className="mx-auto max-w-2xl p-6">
+      <AppHeader title="고객 정보 수정" />
       <CustomerForm
         mode="edit"
         customerId={customer.id}

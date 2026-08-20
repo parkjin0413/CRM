@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { sortCustomers, filterCustomers, type SortField, type SortDirection } from '@/lib/customers/list'
 import { deleteCustomer } from '@/lib/customers/actions'
 import type { Customer } from '@/lib/customers/types'
+import { SourceTag } from './source-tag'
+import { SourceFilterDropdown } from './source-filter-dropdown'
 
 const COLUMNS: { field: SortField; label: string }[] = [
   { field: 'source', label: '구분' },
@@ -53,12 +55,6 @@ export function CustomerListClient({
     }
   }
 
-  function toggleSource(source: string) {
-    setSelectedSources((prev) =>
-      prev.includes(source) ? prev.filter((s) => s !== source) : [...prev, source]
-    )
-  }
-
   function handleDelete(id: string) {
     if (!confirm('이 고객 정보를 삭제할까요?')) return
     setError(null)
@@ -74,75 +70,70 @@ export function CustomerListClient({
 
   return (
     <div>
-      <div className="mb-3 flex flex-wrap items-center gap-3">
+      <div className="mb-4 flex flex-wrap items-center gap-2.5">
         <input
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="이름, 소속, 연락처, 이메일 검색"
-          className="rounded border border-gray-300 px-3 py-2 text-sm"
+          className="input max-w-xs"
         />
-        <div className="flex flex-wrap gap-2 text-sm">
-          {sourceOptions.map((source) => (
-            <label key={source} className="flex items-center gap-1">
-              <input
-                type="checkbox"
-                checked={selectedSources.includes(source)}
-                onChange={() => toggleSource(source)}
-              />
-              {source}
-            </label>
-          ))}
-        </div>
-        <a href={exportHref} className="rounded border border-gray-300 px-3 py-2 text-sm">
+        <SourceFilterDropdown options={sourceOptions} selected={selectedSources} onChange={setSelectedSources} />
+        <a href={exportHref} className="btn-secondary ml-auto">
           엑셀 내보내기
         </a>
       </div>
 
-      {error && <p className="mb-3 text-sm text-red-600">{error}</p>}
+      {error && <p className="mb-3 text-sm text-stamp">{error}</p>}
 
-      <table className="w-full border-collapse text-sm">
-        <thead>
-          <tr>
-            {COLUMNS.map(({ field, label }) => (
-              <th
-                key={field}
-                onClick={() => toggleSort(field)}
-                className="cursor-pointer border-b border-gray-300 px-2 py-2 text-left"
-              >
-                {label}
-                {sortField === field ? (sortDirection === 'asc' ? ' ▲' : ' ▼') : ''}
-              </th>
-            ))}
-            <th className="border-b border-gray-300 px-2 py-2" />
-          </tr>
-        </thead>
-        <tbody>
-          {visible.map((customer) => (
-            <tr key={customer.id} className="border-b border-gray-100">
-              <td className="px-2 py-2">{customer.source}</td>
-              <td className="px-2 py-2">{customer.name}</td>
-              <td className="px-2 py-2">{customer.company}</td>
-              <td className="px-2 py-2">{customer.phone}</td>
-              <td className="px-2 py-2">{customer.email ?? ''}</td>
-              <td className="px-2 py-2">{customer.memo ?? ''}</td>
-              <td className="px-2 py-2">
-                {new Intl.DateTimeFormat('ko-KR', { timeZone: 'Asia/Seoul' }).format(new Date(customer.createdAt))}
-              </td>
-              <td className="px-2 py-2">
-                <Link href={`/customers/${customer.id}/edit`} className="mr-2 text-blue-600">
-                  수정
-                </Link>
-                <button onClick={() => handleDelete(customer.id)} disabled={isPending} className="text-red-600">
-                  삭제
-                </button>
-              </td>
+      <div className="card overflow-x-auto">
+        <table className="w-full min-w-max border-collapse text-sm">
+          <thead>
+            <tr>
+              {COLUMNS.map(({ field, label }) => (
+                <th
+                  key={field}
+                  onClick={() => toggleSort(field)}
+                  className="cursor-pointer whitespace-nowrap border-b border-line px-3 py-2.5 text-left text-xs font-medium text-ink-muted hover:text-ink"
+                >
+                  {label}
+                  {sortField === field ? (sortDirection === 'asc' ? ' ▲' : ' ▼') : ''}
+                </th>
+              ))}
+              <th className="border-b border-line px-3 py-2.5" />
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {visible.map((customer) => (
+              <tr key={customer.id} className="border-b border-line last:border-0 hover:bg-paper">
+                <td className="px-3 py-2.5">
+                  <SourceTag value={customer.source} />
+                </td>
+                <td className="px-3 py-2.5 font-medium text-ink">{customer.name}</td>
+                <td className="px-3 py-2.5">{customer.company}</td>
+                <td className="px-3 py-2.5 font-mono text-[13px]">{customer.phone}</td>
+                <td className="px-3 py-2.5 text-ink-muted">{customer.email ?? ''}</td>
+                <td className="max-w-48 truncate px-3 py-2.5 text-ink-muted">{customer.memo ?? ''}</td>
+                <td className="px-3 py-2.5 font-mono text-[13px] text-ink-muted">
+                  {new Intl.DateTimeFormat('ko-KR', { timeZone: 'Asia/Seoul' }).format(new Date(customer.createdAt))}
+                </td>
+                <td className="whitespace-nowrap px-3 py-2.5">
+                  <Link href={`/customers/${customer.id}/edit`} className="btn-link mr-3 text-sm">
+                    수정
+                  </Link>
+                  <button onClick={() => handleDelete(customer.id)} disabled={isPending} className="text-sm text-stamp hover:underline">
+                    삭제
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
 
-      {visible.length === 0 && <p className="mt-4 text-sm text-gray-500">표시할 고객이 없습니다.</p>}
+        {visible.length === 0 && (
+          <p className="px-3 py-10 text-center text-sm text-ink-muted">표시할 고객이 없습니다.</p>
+        )}
+      </div>
     </div>
   )
 }

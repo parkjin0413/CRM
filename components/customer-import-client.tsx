@@ -44,33 +44,33 @@ export function CustomerImportClient() {
   }
 
   return (
-    <div className="flex max-w-lg flex-col gap-3 font-sans">
-      <input
-        type="file"
-        accept=".xlsx,.xls"
-        onChange={(e) => {
-          setFile(e.target.files?.[0] ?? null)
-          setResult(null)
-          setInsertedCount(null)
-        }}
-      />
-      <button
-        onClick={handlePreview}
-        disabled={!file || isPending}
-        className="w-fit rounded bg-black px-3 py-2 text-white"
-      >
+    <div className="card flex max-w-lg flex-col gap-4 p-6">
+      <label className="flex flex-col gap-1.5 text-sm">
+        <span className="font-medium text-ink">엑셀 파일</span>
+        <input
+          type="file"
+          accept=".xlsx,.xls"
+          onChange={(e) => {
+            setFile(e.target.files?.[0] ?? null)
+            setResult(null)
+            setInsertedCount(null)
+          }}
+          className="text-sm text-ink-muted file:mr-3 file:rounded-md file:border-0 file:bg-paper file:px-3 file:py-2 file:text-sm file:font-medium file:text-ink hover:file:bg-line/40"
+        />
+      </label>
+      <button onClick={handlePreview} disabled={!file || isPending} className="btn-primary w-fit">
         업로드 및 미리보기
       </button>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-stamp">{error}</p>}
 
       {result && insertedCount === null && (
-        <div className="rounded border border-gray-300 p-3 text-sm">
-          <p>
+        <div className="rounded-md border border-line bg-paper p-3 text-sm">
+          <p className="text-ink">
             정상 {result.valid.length}건 / 중복 제외 {result.duplicates.length}건 / 오류 {result.errors.length}건
           </p>
           {result.duplicates.length > 0 && (
-            <ul className="mt-2 list-disc pl-5 text-yellow-700">
+            <ul className="mt-2 list-disc pl-5 text-[#7a5b15]">
               {result.duplicates.map((d) => (
                 <li key={d.rowNumber}>
                   {d.rowNumber}행: {d.reason}
@@ -79,7 +79,7 @@ export function CustomerImportClient() {
             </ul>
           )}
           {result.errors.length > 0 && (
-            <ul className="mt-2 list-disc pl-5 text-red-700">
+            <ul className="mt-2 list-disc pl-5 text-stamp">
               {result.errors.map((e) => (
                 <li key={e.rowNumber}>
                   {e.rowNumber}행: {e.reason}
@@ -90,7 +90,7 @@ export function CustomerImportClient() {
           <button
             onClick={handleCommit}
             disabled={result.valid.length === 0 || isCommitting}
-            className="mt-3 w-fit rounded bg-black px-3 py-2 text-white disabled:opacity-50"
+            className="btn-primary mt-3 w-fit"
           >
             등록
           </button>
@@ -98,9 +98,9 @@ export function CustomerImportClient() {
       )}
 
       {insertedCount !== null && (
-        <div className="rounded border border-gray-300 p-3 text-sm">
-          <p>{insertedCount}건 등록됨</p>
-          <button onClick={() => router.push('/')} className="mt-3 rounded border border-gray-300 px-3 py-1">
+        <div className="rounded-md border border-line bg-paper p-3 text-sm">
+          <p className="text-ink">{insertedCount}건 등록됨</p>
+          <button onClick={() => router.push('/')} className="btn-secondary mt-3 w-fit">
             목록으로 돌아가기
           </button>
         </div>

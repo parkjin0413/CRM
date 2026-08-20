@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
 import { createCustomer, updateCustomer } from '@/lib/customers/actions'
 import type { Customer, CustomerInput } from '@/lib/customers/types'
+import { SourceTag } from './source-tag'
 
 export function CustomerForm({
   mode,
@@ -68,91 +69,77 @@ export function CustomerForm({
         e.preventDefault()
         submit(false)
       }}
-      className="flex max-w-md flex-col gap-3 font-sans"
+      className="card flex max-w-md flex-col gap-4 p-6"
     >
-      <label className="flex flex-col gap-1 text-sm">
-        구분 *
-        <select
-          value={values.source}
-          onChange={(e) => update('source', e.target.value)}
-          className="rounded border border-gray-300 px-3 py-2"
-        >
-          {sourceOptions.map((s) => (
-            <option key={s} value={s}>
-              {s}
-            </option>
-          ))}
-        </select>
-        {fieldErrors.source && <span className="text-red-600">{fieldErrors.source}</span>}
+      <label className="flex flex-col gap-1.5 text-sm">
+        <span className="font-medium text-ink">
+          구분 <span className="text-stamp">*</span>
+        </span>
+        <div className="flex items-center gap-2.5">
+          <select
+            value={values.source}
+            onChange={(e) => update('source', e.target.value)}
+            className="input"
+          >
+            {sourceOptions.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
+          {values.source && <SourceTag value={values.source} />}
+        </div>
+        {fieldErrors.source && <span className="text-xs text-stamp">{fieldErrors.source}</span>}
       </label>
 
-      <label className="flex flex-col gap-1 text-sm">
-        이름 *
-        <input
-          value={values.name}
-          onChange={(e) => update('name', e.target.value)}
-          className="rounded border border-gray-300 px-3 py-2"
-        />
-        {fieldErrors.name && <span className="text-red-600">{fieldErrors.name}</span>}
+      <label className="flex flex-col gap-1.5 text-sm">
+        <span className="font-medium text-ink">
+          이름 <span className="text-stamp">*</span>
+        </span>
+        <input value={values.name} onChange={(e) => update('name', e.target.value)} className="input" />
+        {fieldErrors.name && <span className="text-xs text-stamp">{fieldErrors.name}</span>}
       </label>
 
-      <label className="flex flex-col gap-1 text-sm">
-        소속(회사) *
-        <input
-          value={values.company}
-          onChange={(e) => update('company', e.target.value)}
-          className="rounded border border-gray-300 px-3 py-2"
-        />
-        {fieldErrors.company && <span className="text-red-600">{fieldErrors.company}</span>}
+      <label className="flex flex-col gap-1.5 text-sm">
+        <span className="font-medium text-ink">
+          소속(회사) <span className="text-stamp">*</span>
+        </span>
+        <input value={values.company} onChange={(e) => update('company', e.target.value)} className="input" />
+        {fieldErrors.company && <span className="text-xs text-stamp">{fieldErrors.company}</span>}
       </label>
 
-      <label className="flex flex-col gap-1 text-sm">
-        연락처 *
-        <input
-          value={values.phone}
-          onChange={(e) => update('phone', e.target.value)}
-          className="rounded border border-gray-300 px-3 py-2"
-        />
-        {fieldErrors.phone && <span className="text-red-600">{fieldErrors.phone}</span>}
+      <label className="flex flex-col gap-1.5 text-sm">
+        <span className="font-medium text-ink">
+          연락처 <span className="text-stamp">*</span>
+        </span>
+        <input value={values.phone} onChange={(e) => update('phone', e.target.value)} className="input font-mono" />
+        {fieldErrors.phone && <span className="text-xs text-stamp">{fieldErrors.phone}</span>}
       </label>
 
-      <label className="flex flex-col gap-1 text-sm">
-        이메일
-        <input
-          value={values.email ?? ''}
-          onChange={(e) => update('email', e.target.value)}
-          className="rounded border border-gray-300 px-3 py-2"
-        />
+      <label className="flex flex-col gap-1.5 text-sm">
+        <span className="font-medium text-ink">이메일</span>
+        <input value={values.email ?? ''} onChange={(e) => update('email', e.target.value)} className="input" />
       </label>
 
-      <label className="flex flex-col gap-1 text-sm">
-        메모
-        <textarea
-          value={values.memo ?? ''}
-          onChange={(e) => update('memo', e.target.value)}
-          className="rounded border border-gray-300 px-3 py-2"
-        />
+      <label className="flex flex-col gap-1.5 text-sm">
+        <span className="font-medium text-ink">메모</span>
+        <textarea value={values.memo ?? ''} onChange={(e) => update('memo', e.target.value)} rows={3} className="input" />
       </label>
 
       {duplicate && (
-        <div className="rounded border border-yellow-400 bg-yellow-50 p-3 text-sm">
+        <div className="rounded-md border border-stamp/30 bg-stamp-bg p-3 text-sm text-ink">
           <p>
             이미 등록된 연락처입니다: {duplicate.name} ({duplicate.company})
           </p>
-          <button
-            type="button"
-            onClick={() => submit(true)}
-            disabled={isPending}
-            className="mt-2 rounded bg-black px-3 py-1 text-white"
-          >
+          <button type="button" onClick={() => submit(true)} disabled={isPending} className="btn-primary mt-2 bg-stamp hover:opacity-90">
             그래도 등록
           </button>
         </div>
       )}
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-stamp">{error}</p>}
 
-      <button type="submit" disabled={isPending} className="rounded bg-black px-3 py-2 text-white">
+      <button type="submit" disabled={isPending} className="btn-primary">
         {mode === 'create' ? '등록' : '저장'}
       </button>
     </form>
