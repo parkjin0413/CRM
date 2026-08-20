@@ -11,8 +11,10 @@ export type Customer = {
   /** Short-lived signed URL, attached only where the card is actually displayed. */
   businessCardUrl?: string | null
   isFavorite: boolean
-  /** Most recent contact_logs date, attached only where it's actually displayed. */
+  /** Contact-log summary, attached only where it's actually displayed (see attachContactSummaries). */
   lastContactedAt?: string | null
+  contactCount?: number
+  recentContactLogs?: { contactedAt: string; method: string; note: string | null }[]
   createdAt: string
   updatedAt: string
 }

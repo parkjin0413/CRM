@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { sortCustomers, filterCustomers, type SortField, type SortDirection } from '@/lib/customers/list'
 import { deleteCustomer } from '@/lib/customers/actions'
@@ -10,7 +11,11 @@ import type { Customer } from '@/lib/customers/types'
 import { SourceTag } from './source-tag'
 import { SourceFilterDropdown } from './source-filter-dropdown'
 import { BusinessCardPreview } from './business-card-preview'
+import { ContactHistoryPreview } from './contact-history-preview'
 import { FavoriteToggle } from './favorite-toggle'
+import { BulkContactLogBar } from './bulk-contact-log-bar'
+
+type ListSortField = SortField | 'contactCount'
 
 const COLUMNS: { field: SortField; label: string }[] = [
   { field: 'source', label: '구분' },
@@ -26,6 +31,10 @@ function formatDate(iso: string) {
   return new Intl.DateTimeFormat('ko-KR', { timeZone: 'Asia/Seoul' }).format(new Date(iso))
 }
 
+function lastContactLabel(customer: Customer) {
+  return customer.lastContactedAt ? formatRelativeDays(customer.lastContactedAt) : '기록 없음'
+}
+
 export function CustomerListClient({
   initialCustomers,
   sourceOptions,
@@ -33,17 +42,25 @@ export function CustomerListClient({
   initialCustomers: Customer[]
   sourceOptions: string[]
 }) {
+  const router = useRouter()
   const [customers, setCustomers] = useState(initialCustomers)
-  const [sortField, setSortField] = useState<SortField>('createdAt')
+  const [sortField, setSortField] = useState<ListSortField>('createdAt')
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
   const [selectedSources, setSelectedSources] = useState<string[]>([])
   const [search, setSearch] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [isPending, startTransition] = useTransition()
 
   const visible = useMemo(() => {
     const filtered = filterCustomers(customers, { sources: selectedSources, search })
-    const sorted = sortCustomers(filtered, sortField, sortDirection)
+    const sorted =
+      sortField === 'contactCount'
+        ? [...filtered].sort((a, b) => {
+            const diff = (a.contactCount ?? 0) - (b.contactCount ?? 0)
+            return sortDirection === 'asc' ? diff : -diff
+          })
+        : sortCustomers(filtered, sortField, sortDirection)
     // Stable sort: keeps the chosen sort order within each group, just floats favorites up.
     return [...sorted].sort((a, b) => Number(b.isFavorite) - Number(a.isFavorite))
   }, [customers, selectedSources, search, sortField, sortDirection])
@@ -56,13 +73,42 @@ export function CustomerListClient({
     return query ? `/api/customers/export?${query}` : '/api/customers/export'
   }, [selectedSources, search])
 
-  function toggleSort(field: SortField) {
+  function toggleSort(field: ListSortField) {
     if (field === sortField) {
       setSortDirection((d) => (d === 'asc' ? 'desc' : 'asc'))
     } else {
       setSortField(field)
       setSortDirection('asc')
     }
+  }
+
+  function toggleSelect(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const allVisibleSelected = visible.length > 0 && visible.every((c) => selectedIds.has(c.id))
+
+  function toggleSelectAllVisible() {
+    setSelectedIds((prev) => {
+      if (allVisibleSelected) {
+        const next = new Set(prev)
+        visible.forEach((c) => next.delete(c.id))
+        return next
+      }
+      const next = new Set(prev)
+      visible.forEach((c) => next.add(c.id))
+      return next
+    })
+  }
+
+  function handleBulkDone() {
+    setSelectedIds(new Set())
+    router.refresh()
   }
 
   function handleDelete(id: string) {
@@ -72,6 +118,11 @@ export function CustomerListClient({
       try {
         await deleteCustomer(id)
         setCustomers((prev) => prev.filter((c) => c.id !== id))
+        setSelectedIds((prev) => {
+          const next = new Set(prev)
+          next.delete(id)
+          return next
+        })
       } catch (e) {
         setError(e instanceof Error ? e.message : '삭제 중 오류가 발생했습니다.')
       }
@@ -94,6 +145,14 @@ export function CustomerListClient({
         </a>
       </div>
 
+      {selectedIds.size > 0 && (
+        <BulkContactLogBar
+          selectedIds={[...selectedIds]}
+          onDone={handleBulkDone}
+          onClear={() => setSelectedIds(new Set())}
+        />
+      )}
+
       {error && <p className="mb-3 text-sm text-stamp">{error}</p>}
 
       {visible.length === 0 && (
@@ -108,6 +167,13 @@ export function CustomerListClient({
               <li key={customer.id} className="card p-4">
                 <div className="mb-2 flex items-start justify-between gap-2">
                   <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(customer.id)}
+                      onChange={() => toggleSelect(customer.id)}
+                      className="accent-accent"
+                      aria-label={`${customer.name} 선택`}
+                    />
                     <FavoriteToggle id={customer.id} initialValue={customer.isFavorite} />
                     <SourceTag value={customer.source} />
                   </div>
@@ -121,7 +187,7 @@ export function CustomerListClient({
                 </div>
                 <dl className="mt-2 flex flex-col gap-1 text-sm">
                   <div className="flex gap-2">
-                    <dt className="w-12 shrink-0 text-ink-muted">연락처</dt>
+                    <dt className="w-16 shrink-0 text-ink-muted">연락처</dt>
                     <dd>
                       <a href={`tel:${customer.phoneNormalized}`} className="btn-link font-mono">
                         {formatPhone(customer.phoneNormalized)}
@@ -130,7 +196,7 @@ export function CustomerListClient({
                   </div>
                   {customer.email && (
                     <div className="flex gap-2">
-                      <dt className="w-12 shrink-0 text-ink-muted">이메일</dt>
+                      <dt className="w-16 shrink-0 text-ink-muted">이메일</dt>
                       <dd>
                         <a href={`mailto:${customer.email}`} className="btn-link break-all">
                           {customer.email}
@@ -140,18 +206,18 @@ export function CustomerListClient({
                   )}
                   {customer.memo && (
                     <div className="flex gap-2">
-                      <dt className="w-12 shrink-0 text-ink-muted">메모</dt>
+                      <dt className="w-16 shrink-0 text-ink-muted">메모</dt>
                       <dd className="text-ink-muted">{customer.memo}</dd>
                     </div>
                   )}
                   <div className="flex gap-2">
-                    <dt className="w-12 shrink-0 text-ink-muted">등록일</dt>
+                    <dt className="w-16 shrink-0 text-ink-muted">등록일</dt>
                     <dd className="font-mono text-[13px] text-ink-muted">{formatDate(customer.createdAt)}</dd>
                   </div>
                   <div className="flex gap-2">
-                    <dt className="w-12 shrink-0 text-ink-muted">마지막 연락</dt>
+                    <dt className="w-16 shrink-0 text-ink-muted">마지막 연락</dt>
                     <dd className="text-ink-muted">
-                      {customer.lastContactedAt ? formatRelativeDays(customer.lastContactedAt) : '기록 없음'}
+                      <ContactHistoryPreview label={lastContactLabel(customer)} logs={customer.recentContactLogs} />
                     </dd>
                   </div>
                 </dl>
@@ -176,6 +242,15 @@ export function CustomerListClient({
             <table className="w-full min-w-max border-collapse text-sm">
               <thead>
                 <tr>
+                  <th className="border-b border-line px-3 py-2.5">
+                    <input
+                      type="checkbox"
+                      checked={allVisibleSelected}
+                      onChange={toggleSelectAllVisible}
+                      className="accent-accent"
+                      aria-label="현재 목록 전체 선택"
+                    />
+                  </th>
                   <th className="border-b border-line px-3 py-2.5" />
                   {COLUMNS.map(({ field, label }) => (
                     <th
@@ -187,8 +262,12 @@ export function CustomerListClient({
                       {sortField === field ? (sortDirection === 'asc' ? ' ▲' : ' ▼') : ''}
                     </th>
                   ))}
-                  <th className="whitespace-nowrap border-b border-line px-3 py-2.5 text-left text-xs font-medium text-ink-muted">
+                  <th
+                    onClick={() => toggleSort('contactCount')}
+                    className="cursor-pointer whitespace-nowrap border-b border-line px-3 py-2.5 text-left text-xs font-medium text-ink-muted hover:text-ink"
+                  >
                     마지막 연락
+                    {sortField === 'contactCount' ? (sortDirection === 'asc' ? ' ▲' : ' ▼') : ''}
                   </th>
                   <th className="border-b border-line px-3 py-2.5" />
                 </tr>
@@ -196,6 +275,15 @@ export function CustomerListClient({
               <tbody>
                 {visible.map((customer) => (
                   <tr key={customer.id} className="border-b border-line last:border-0 hover:bg-paper">
+                    <td className="px-3 py-2.5">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(customer.id)}
+                        onChange={() => toggleSelect(customer.id)}
+                        className="accent-accent"
+                        aria-label={`${customer.name} 선택`}
+                      />
+                    </td>
                     <td className="px-3 py-2.5">
                       <FavoriteToggle id={customer.id} initialValue={customer.isFavorite} />
                     </td>
@@ -225,7 +313,7 @@ export function CustomerListClient({
                       {formatDate(customer.createdAt)}
                     </td>
                     <td className="whitespace-nowrap px-3 py-2.5 text-ink-muted">
-                      {customer.lastContactedAt ? formatRelativeDays(customer.lastContactedAt) : '기록 없음'}
+                      <ContactHistoryPreview label={lastContactLabel(customer)} logs={customer.recentContactLogs} />
                     </td>
                     <td className="whitespace-nowrap px-3 py-2.5">
                       <Link href={`/customers/${customer.id}`} className="btn-link mr-3 text-sm">
