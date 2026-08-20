@@ -4,7 +4,8 @@
   --paper: #faf7f2;
   --paper-raised: #ffffff;
   --ink: #1f2430;
-  --ink-muted: #837c6d;
+  /* #6b6456 on --paper is ~5.5:1 contrast (WCAG AA); the previous #837c6d was ~3.9:1. */
+  --ink-muted: #6b6456;
   --accent: #2c4a6e;
   --accent-hover: #223a58;
   --line: #e2dccd;

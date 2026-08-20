@@ -13,7 +13,7 @@ import { SourceFilterDropdown } from './source-filter-dropdown'
 import { BusinessCardPreview } from './business-card-preview'
 import { ContactHistoryPreview } from './contact-history-preview'
 import { FavoriteToggle } from './favorite-toggle'
-import { BulkContactLogBar } from './bulk-contact-log-bar'
+import { BulkActionsBar } from './bulk-actions-bar'
 
 type ListSortField = SortField | 'contactCount'
 
@@ -144,8 +144,9 @@ export function CustomerListClient({
       </div>
 
       {selectedIds.size > 0 && (
-        <BulkContactLogBar
+        <BulkActionsBar
           selectedIds={[...selectedIds]}
+          sourceOptions={sourceOptions}
           onDone={handleBulkDone}
           onClear={() => setSelectedIds(new Set())}
         />
@@ -282,7 +283,7 @@ export function CustomerListClient({
               <tbody>
                 {visible.map((customer) => (
                   <tr key={customer.id} className="border-b border-line last:border-0 hover:bg-paper">
-                    <td className="py-2 pl-3 pr-1.5">
+                    <td className="py-2.5 pl-3 pr-1.5">
                       <input
                         type="checkbox"
                         checked={selectedIds.has(customer.id)}
@@ -291,22 +292,22 @@ export function CustomerListClient({
                         aria-label={`${customer.name} 선택`}
                       />
                     </td>
-                    <td className="px-1.5 py-2">
+                    <td className="px-1.5 py-2.5">
                       <FavoriteToggle id={customer.id} initialValue={customer.isFavorite} />
                     </td>
-                    <td className="px-2.5 py-2">
+                    <td className="px-2.5 py-2.5">
                       <SourceTag value={customer.source} />
                     </td>
-                    <td className="max-w-28 truncate px-2.5 py-2">{customer.company}</td>
-                    <td className="px-2.5 py-2">
+                    <td className="max-w-28 truncate px-2.5 py-2.5">{customer.company}</td>
+                    <td className="px-2.5 py-2.5">
                       <BusinessCardPreview name={customer.name} imageUrl={customer.businessCardUrl} />
                     </td>
-                    <td className="px-2.5 py-2">
+                    <td className="px-2.5 py-2.5">
                       <a href={`tel:${customer.phoneNormalized}`} className="btn-link font-mono text-[13px]">
                         {formatPhone(customer.phoneNormalized)}
                       </a>
                     </td>
-                    <td className="max-w-36 truncate px-2.5 py-2 text-ink-muted">
+                    <td className="max-w-36 truncate px-2.5 py-2.5 text-ink-muted">
                       {customer.email ? (
                         <a href={`mailto:${customer.email}`} className="btn-link">
                           {customer.email}
@@ -315,14 +316,14 @@ export function CustomerListClient({
                         ''
                       )}
                     </td>
-                    <td className="max-w-32 truncate px-2.5 py-2 text-ink-muted">{customer.memo ?? ''}</td>
-                    <td className="px-2.5 py-2 font-mono text-[13px] text-ink-muted">
+                    <td className="max-w-32 truncate px-2.5 py-2.5 text-ink-muted">{customer.memo ?? ''}</td>
+                    <td className="px-2.5 py-2.5 font-mono text-[13px] text-ink-muted">
                       {formatDate(customer.createdAt)}
                     </td>
-                    <td className="whitespace-nowrap px-2.5 py-2 text-ink-muted">
+                    <td className="whitespace-nowrap px-2.5 py-2.5 text-ink-muted">
                       <ContactHistoryPreview label={lastContactLabel(customer)} logs={customer.recentContactLogs} />
                     </td>
-                    <td className="whitespace-nowrap px-2.5 py-2">
+                    <td className="whitespace-nowrap px-2.5 py-2.5">
                       <Link href={`/customers/${customer.id}`} className="btn-link mr-2 text-sm">
                         상세
                       </Link>
