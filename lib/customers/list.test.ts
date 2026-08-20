@@ -12,6 +12,7 @@ function customer(overrides: Partial<Customer>): Customer {
     phoneNormalized: '01000000000',
     email: null,
     memo: null,
+    businessCardPath: null,
     createdAt: '2026-01-01T00:00:00.000Z',
     updatedAt: '2026-01-01T00:00:00.000Z',
     ...overrides,

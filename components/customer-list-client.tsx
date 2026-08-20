@@ -7,6 +7,7 @@ import { deleteCustomer } from '@/lib/customers/actions'
 import type { Customer } from '@/lib/customers/types'
 import { SourceTag } from './source-tag'
 import { SourceFilterDropdown } from './source-filter-dropdown'
+import { BusinessCardPreview } from './business-card-preview'
 
 const COLUMNS: { field: SortField; label: string }[] = [
   { field: 'source', label: '구분' },
@@ -17,6 +18,10 @@ const COLUMNS: { field: SortField; label: string }[] = [
   { field: 'memo', label: '메모' },
   { field: 'createdAt', label: '등록일' },
 ]
+
+function formatDate(iso: string) {
+  return new Intl.DateTimeFormat('ko-KR', { timeZone: 'Asia/Seoul' }).format(new Date(iso))
+}
 
 export function CustomerListClient({
   initialCustomers,
@@ -79,61 +84,139 @@ export function CustomerListClient({
           className="input max-w-xs"
         />
         <SourceFilterDropdown options={sourceOptions} selected={selectedSources} onChange={setSelectedSources} />
-        <a href={exportHref} className="btn-secondary ml-auto">
+        <a href={exportHref} className="btn-secondary sm:ml-auto">
           엑셀 내보내기
         </a>
       </div>
 
       {error && <p className="mb-3 text-sm text-stamp">{error}</p>}
 
-      <div className="card overflow-x-auto">
-        <table className="w-full min-w-max border-collapse text-sm">
-          <thead>
-            <tr>
-              {COLUMNS.map(({ field, label }) => (
-                <th
-                  key={field}
-                  onClick={() => toggleSort(field)}
-                  className="cursor-pointer whitespace-nowrap border-b border-line px-3 py-2.5 text-left text-xs font-medium text-ink-muted hover:text-ink"
-                >
-                  {label}
-                  {sortField === field ? (sortDirection === 'asc' ? ' ▲' : ' ▼') : ''}
-                </th>
-              ))}
-              <th className="border-b border-line px-3 py-2.5" />
-            </tr>
-          </thead>
-          <tbody>
+      {visible.length === 0 && (
+        <div className="card px-3 py-10 text-center text-sm text-ink-muted">표시할 고객이 없습니다.</div>
+      )}
+
+      {visible.length > 0 && (
+        <>
+          {/* Mobile: stacked cards. Hidden from sm: up, where the table takes over. */}
+          <ul className="flex flex-col gap-3 sm:hidden">
             {visible.map((customer) => (
-              <tr key={customer.id} className="border-b border-line last:border-0 hover:bg-paper">
-                <td className="px-3 py-2.5">
+              <li key={customer.id} className="card p-4">
+                <div className="mb-2 flex items-start justify-between gap-2">
+                  <BusinessCardPreview name={customer.name} imageUrl={customer.businessCardUrl} />
                   <SourceTag value={customer.source} />
-                </td>
-                <td className="px-3 py-2.5 font-medium text-ink">{customer.name}</td>
-                <td className="px-3 py-2.5">{customer.company}</td>
-                <td className="px-3 py-2.5 font-mono text-[13px]">{customer.phone}</td>
-                <td className="px-3 py-2.5 text-ink-muted">{customer.email ?? ''}</td>
-                <td className="max-w-48 truncate px-3 py-2.5 text-ink-muted">{customer.memo ?? ''}</td>
-                <td className="px-3 py-2.5 font-mono text-[13px] text-ink-muted">
-                  {new Intl.DateTimeFormat('ko-KR', { timeZone: 'Asia/Seoul' }).format(new Date(customer.createdAt))}
-                </td>
-                <td className="whitespace-nowrap px-3 py-2.5">
-                  <Link href={`/customers/${customer.id}/edit`} className="btn-link mr-3 text-sm">
+                </div>
+                <p className="text-sm text-ink-muted">{customer.company}</p>
+                <dl className="mt-2 flex flex-col gap-1 text-sm">
+                  <div className="flex gap-2">
+                    <dt className="w-12 shrink-0 text-ink-muted">연락처</dt>
+                    <dd>
+                      <a href={`tel:${customer.phoneNormalized}`} className="btn-link font-mono">
+                        {customer.phone}
+                      </a>
+                    </dd>
+                  </div>
+                  {customer.email && (
+                    <div className="flex gap-2">
+                      <dt className="w-12 shrink-0 text-ink-muted">이메일</dt>
+                      <dd>
+                        <a href={`mailto:${customer.email}`} className="btn-link break-all">
+                          {customer.email}
+                        </a>
+                      </dd>
+                    </div>
+                  )}
+                  {customer.memo && (
+                    <div className="flex gap-2">
+                      <dt className="w-12 shrink-0 text-ink-muted">메모</dt>
+                      <dd className="text-ink-muted">{customer.memo}</dd>
+                    </div>
+                  )}
+                  <div className="flex gap-2">
+                    <dt className="w-12 shrink-0 text-ink-muted">등록일</dt>
+                    <dd className="font-mono text-[13px] text-ink-muted">{formatDate(customer.createdAt)}</dd>
+                  </div>
+                </dl>
+                <div className="mt-3 flex gap-3 border-t border-line pt-3">
+                  <Link href={`/customers/${customer.id}/edit`} className="btn-link text-sm">
                     수정
                   </Link>
-                  <button onClick={() => handleDelete(customer.id)} disabled={isPending} className="text-sm text-stamp hover:underline">
+                  <button
+                    onClick={() => handleDelete(customer.id)}
+                    disabled={isPending}
+                    className="text-sm text-stamp hover:underline"
+                  >
                     삭제
                   </button>
-                </td>
-              </tr>
+                </div>
+              </li>
             ))}
-          </tbody>
-        </table>
+          </ul>
 
-        {visible.length === 0 && (
-          <p className="px-3 py-10 text-center text-sm text-ink-muted">표시할 고객이 없습니다.</p>
-        )}
-      </div>
+          {/* Desktop / tablet: full table. */}
+          <div className="card hidden overflow-x-auto sm:block">
+            <table className="w-full min-w-max border-collapse text-sm">
+              <thead>
+                <tr>
+                  {COLUMNS.map(({ field, label }) => (
+                    <th
+                      key={field}
+                      onClick={() => toggleSort(field)}
+                      className="cursor-pointer whitespace-nowrap border-b border-line px-3 py-2.5 text-left text-xs font-medium text-ink-muted hover:text-ink"
+                    >
+                      {label}
+                      {sortField === field ? (sortDirection === 'asc' ? ' ▲' : ' ▼') : ''}
+                    </th>
+                  ))}
+                  <th className="border-b border-line px-3 py-2.5" />
+                </tr>
+              </thead>
+              <tbody>
+                {visible.map((customer) => (
+                  <tr key={customer.id} className="border-b border-line last:border-0 hover:bg-paper">
+                    <td className="px-3 py-2.5">
+                      <SourceTag value={customer.source} />
+                    </td>
+                    <td className="px-3 py-2.5">
+                      <BusinessCardPreview name={customer.name} imageUrl={customer.businessCardUrl} />
+                    </td>
+                    <td className="px-3 py-2.5">{customer.company}</td>
+                    <td className="px-3 py-2.5">
+                      <a href={`tel:${customer.phoneNormalized}`} className="btn-link font-mono text-[13px]">
+                        {customer.phone}
+                      </a>
+                    </td>
+                    <td className="px-3 py-2.5 text-ink-muted">
+                      {customer.email ? (
+                        <a href={`mailto:${customer.email}`} className="btn-link">
+                          {customer.email}
+                        </a>
+                      ) : (
+                        ''
+                      )}
+                    </td>
+                    <td className="max-w-48 truncate px-3 py-2.5 text-ink-muted">{customer.memo ?? ''}</td>
+                    <td className="px-3 py-2.5 font-mono text-[13px] text-ink-muted">
+                      {formatDate(customer.createdAt)}
+                    </td>
+                    <td className="whitespace-nowrap px-3 py-2.5">
+                      <Link href={`/customers/${customer.id}/edit`} className="btn-link mr-3 text-sm">
+                        수정
+                      </Link>
+                      <button
+                        onClick={() => handleDelete(customer.id)}
+                        disabled={isPending}
+                        className="text-sm text-stamp hover:underline"
+                      >
+                        삭제
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
     </div>
   )
 }

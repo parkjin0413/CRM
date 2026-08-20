@@ -6,6 +6,9 @@ import { normalizePhone } from './phone'
 import { validateCustomerInput, type ValidationError } from './validation'
 import { mapRowToCustomer, type Customer, type CustomerInput, type CustomerRow } from './types'
 
+const BUSINESS_CARD_BUCKET = 'business-cards'
+const BUSINESS_CARD_SIGNED_URL_TTL_SECONDS = 60 * 60
+
 export async function getSourceOptions(): Promise<string[]> {
   const supabase = getSupabaseServerClient()
   const { data, error } = await supabase.from('source_options').select('value').order('sort_order')
@@ -23,6 +26,39 @@ export async function getCustomers(): Promise<Customer[]> {
   return (data as CustomerRow[] | null ?? []).map(mapRowToCustomer)
 }
 
+/** Attaches short-lived signed URLs for display. Only call where cards are actually shown. */
+export async function attachBusinessCardUrls(customers: Customer[]): Promise<Customer[]> {
+  const paths = customers.map((c) => c.businessCardPath).filter((p): p is string => !!p)
+  if (paths.length === 0) return customers
+
+  const supabase = getSupabaseServerClient()
+  const { data, error } = await supabase.storage
+    .from(BUSINESS_CARD_BUCKET)
+    .createSignedUrls(paths, BUSINESS_CARD_SIGNED_URL_TTL_SECONDS)
+  if (error) throw new Error(error.message)
+
+  const urlByPath = new Map((data ?? []).map((d) => [d.path, d.signedUrl]))
+  return customers.map((c) =>
+    c.businessCardPath ? { ...c, businessCardUrl: urlByPath.get(c.businessCardPath) ?? null } : c
+  )
+}
+
+async function uploadBusinessCard(file: File): Promise<string> {
+  const supabase = getSupabaseServerClient()
+  const extension = file.name.includes('.') ? file.name.split('.').pop() : 'jpg'
+  const path = `${crypto.randomUUID()}.${extension}`
+  const { error } = await supabase.storage
+    .from(BUSINESS_CARD_BUCKET)
+    .upload(path, file, { contentType: file.type || undefined })
+  if (error) throw new Error(error.message)
+  return path
+}
+
+async function deleteBusinessCard(path: string): Promise<void> {
+  const supabase = getSupabaseServerClient()
+  await supabase.storage.from(BUSINESS_CARD_BUCKET).remove([path])
+}
+
 export type CreateCustomerResult =
   | { status: 'created'; customer: Customer }
   | { status: 'duplicate'; existing: Customer }
@@ -30,7 +66,7 @@ export type CreateCustomerResult =
 
 export async function createCustomer(
   input: CustomerInput,
-  options: { force?: boolean } = {}
+  options: { force?: boolean; businessCardFile?: File | null } = {}
 ): Promise<CreateCustomerResult> {
   const sourceOptions = await getSourceOptions()
   const errors = validateCustomerInput(input, sourceOptions)
@@ -53,6 +89,8 @@ export async function createCustomer(
     }
   }
 
+  const businessCardPath = options.businessCardFile ? await uploadBusinessCard(options.businessCardFile) : null
+
   const { data, error } = await supabase
     .from('customers')
     .insert({
@@ -63,11 +101,15 @@ export async function createCustomer(
       phone_normalized: phoneNormalized,
       email: input.email || null,
       memo: input.memo || null,
+      business_card_path: businessCardPath,
     })
     .select()
     .single()
 
-  if (error) throw new Error(error.message)
+  if (error) {
+    if (businessCardPath) await deleteBusinessCard(businessCardPath)
+    throw new Error(error.message)
+  }
   revalidatePath('/')
   return { status: 'created', customer: mapRowToCustomer(data as CustomerRow) }
 }
@@ -76,7 +118,11 @@ export type UpdateCustomerResult =
   | { status: 'ok' }
   | { status: 'invalid'; errors: ValidationError[] }
 
-export async function updateCustomer(id: string, input: CustomerInput): Promise<UpdateCustomerResult> {
+export async function updateCustomer(
+  id: string,
+  input: CustomerInput,
+  options: { businessCardFile?: File | null; removeBusinessCard?: boolean } = {}
+): Promise<UpdateCustomerResult> {
   const sourceOptions = await getSourceOptions()
   const errors = validateCustomerInput(input, sourceOptions)
   if (errors.length > 0) {
@@ -84,6 +130,19 @@ export async function updateCustomer(id: string, input: CustomerInput): Promise<
   }
 
   const supabase = getSupabaseServerClient()
+
+  let businessCardPath: string | null | undefined
+  let previousPath: string | null = null
+  if (options.businessCardFile || options.removeBusinessCard) {
+    const { data: existing } = await supabase.from('customers').select('business_card_path').eq('id', id).single()
+    previousPath = (existing?.business_card_path as string | null) ?? null
+  }
+  if (options.businessCardFile) {
+    businessCardPath = await uploadBusinessCard(options.businessCardFile)
+  } else if (options.removeBusinessCard) {
+    businessCardPath = null
+  }
+
   const { error } = await supabase
     .from('customers')
     .update({
@@ -94,18 +153,29 @@ export async function updateCustomer(id: string, input: CustomerInput): Promise<
       phone_normalized: normalizePhone(input.phone),
       email: input.email || null,
       memo: input.memo || null,
+      ...(businessCardPath !== undefined ? { business_card_path: businessCardPath } : {}),
     })
     .eq('id', id)
 
-  if (error) throw new Error(error.message)
+  if (error) {
+    if (options.businessCardFile && businessCardPath) await deleteBusinessCard(businessCardPath)
+    throw new Error(error.message)
+  }
+  if (previousPath && previousPath !== businessCardPath) {
+    await deleteBusinessCard(previousPath)
+  }
+
   revalidatePath('/')
   return { status: 'ok' }
 }
 
 export async function deleteCustomer(id: string): Promise<void> {
   const supabase = getSupabaseServerClient()
+  const { data: existing } = await supabase.from('customers').select('business_card_path').eq('id', id).single()
   const { error } = await supabase.from('customers').delete().eq('id', id)
   if (error) throw new Error(error.message)
+  const path = existing?.business_card_path as string | null
+  if (path) await deleteBusinessCard(path)
   revalidatePath('/')
 }
 

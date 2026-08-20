@@ -7,6 +7,9 @@ export type Customer = {
   phoneNormalized: string
   email: string | null
   memo: string | null
+  businessCardPath: string | null
+  /** Short-lived signed URL, attached only where the card is actually displayed. */
+  businessCardUrl?: string | null
   createdAt: string
   updatedAt: string
 }
@@ -29,6 +32,7 @@ export type CustomerRow = {
   phone_normalized: string
   email: string | null
   memo: string | null
+  business_card_path: string | null
   created_at: string
   updated_at: string
 }
@@ -43,6 +47,7 @@ export function mapRowToCustomer(row: CustomerRow): Customer {
     phoneNormalized: row.phone_normalized,
     email: row.email,
     memo: row.memo,
+    businessCardPath: row.business_card_path,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   }

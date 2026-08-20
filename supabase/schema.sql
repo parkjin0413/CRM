@@ -24,6 +24,7 @@ create table customers (
   phone_normalized text not null,
   email text,
   memo text,
+  business_card_path text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -48,3 +49,10 @@ alter table customers enable row level security;
 alter table source_options enable row level security;
 -- No policies are created: the anon key can read/write nothing.
 -- All access goes through the server-only service role key, which bypasses RLS.
+
+-- Private storage bucket for uploaded business card photos. Not public;
+-- the app reads/writes it only through the service role key and serves
+-- images via short-lived signed URLs generated server-side.
+insert into storage.buckets (id, name, public)
+values ('business-cards', 'business-cards', false)
+on conflict (id) do nothing;

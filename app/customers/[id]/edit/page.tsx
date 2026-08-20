@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { getCustomers, getSourceOptions } from '@/lib/customers/actions'
+import { getCustomers, getSourceOptions, attachBusinessCardUrls } from '@/lib/customers/actions'
 import { CustomerForm } from '@/components/customer-form'
 import { AppHeader } from '@/components/app-header'
 
@@ -8,6 +8,7 @@ export default async function EditCustomerPage({ params }: { params: Promise<{ i
   const [customers, sourceOptions] = await Promise.all([getCustomers(), getSourceOptions()])
   const customer = customers.find((c) => c.id === id)
   if (!customer) notFound()
+  const [withCard] = await attachBusinessCardUrls([customer])
 
   return (
     <main className="mx-auto max-w-2xl p-6">
@@ -24,6 +25,7 @@ export default async function EditCustomerPage({ params }: { params: Promise<{ i
           email: customer.email ?? '',
           memo: customer.memo ?? '',
         }}
+        existingBusinessCardUrl={withCard.businessCardUrl ?? null}
       />
     </main>
   )

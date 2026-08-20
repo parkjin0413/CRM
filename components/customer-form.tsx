@@ -5,17 +5,20 @@ import { useState, useTransition } from 'react'
 import { createCustomer, updateCustomer } from '@/lib/customers/actions'
 import type { Customer, CustomerInput } from '@/lib/customers/types'
 import { SourceTag } from './source-tag'
+import { BusinessCardUpload } from './business-card-upload'
 
 export function CustomerForm({
   mode,
   customerId,
   initialValue,
   sourceOptions,
+  existingBusinessCardUrl,
 }: {
   mode: 'create' | 'edit'
   customerId?: string
   initialValue?: CustomerInput
   sourceOptions: string[]
+  existingBusinessCardUrl?: string | null
 }) {
   const router = useRouter()
   const [values, setValues] = useState<CustomerInput>(
@@ -25,6 +28,8 @@ export function CustomerForm({
   const [duplicate, setDuplicate] = useState<Customer | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+  const [businessCardFile, setBusinessCardFile] = useState<File | null>(null)
+  const [removeBusinessCard, setRemoveBusinessCard] = useState(false)
 
   function update<K extends keyof CustomerInput>(key: K, value: CustomerInput[K]) {
     setValues((prev) => ({ ...prev, [key]: value }))
@@ -38,7 +43,10 @@ export function CustomerForm({
     startTransition(async () => {
       try {
         if (mode === 'edit' && customerId) {
-          const result = await updateCustomer(customerId, values)
+          const result = await updateCustomer(customerId, values, {
+            businessCardFile,
+            removeBusinessCard,
+          })
           if (result.status === 'invalid') {
             setFieldErrors(Object.fromEntries(result.errors.map((e) => [e.field, e.message])))
             return
@@ -47,7 +55,7 @@ export function CustomerForm({
           return
         }
 
-        const result = await createCustomer(values, { force })
+        const result = await createCustomer(values, { force, businessCardFile })
         if (result.status === 'invalid') {
           setFieldErrors(Object.fromEntries(result.errors.map((e) => [e.field, e.message])))
           return
@@ -125,6 +133,14 @@ export function CustomerForm({
         <span className="font-medium text-ink">메모</span>
         <textarea value={values.memo ?? ''} onChange={(e) => update('memo', e.target.value)} rows={3} className="input" />
       </label>
+
+      <BusinessCardUpload
+        existingUrl={existingBusinessCardUrl}
+        onChange={(file, removed) => {
+          setBusinessCardFile(file)
+          setRemoveBusinessCard(removed)
+        }}
+      />
 
       {duplicate && (
         <div className="rounded-md border border-stamp/30 bg-stamp-bg p-3 text-sm text-ink">
