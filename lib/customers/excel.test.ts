@@ -26,6 +26,7 @@ describe('buildExportWorkbook', () => {
       email: 'hong@example.com',
       memo: null,
       businessCardPath: null,
+      isFavorite: false,
       createdAt: '2026-01-01T00:00:00.000Z',
       updatedAt: '2026-01-01T00:00:00.000Z',
     },

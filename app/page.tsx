@@ -18,10 +18,10 @@ export default async function HomePage() {
             <Link href="/customers/new" className="btn-primary">
               개별 등록
             </Link>
-            <Link href="/customers/import" className="btn-secondary">
+            <Link href="/customers/import" className="btn-secondary hidden sm:inline-flex">
               엑셀 일괄등록
             </Link>
-            <a href="/api/customers/template" className="btn-secondary">
+            <a href="/api/customers/template" className="btn-secondary hidden sm:inline-flex">
               양식 다운로드
             </a>
             <Link href="/settings/sources" className="btn-secondary">

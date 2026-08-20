@@ -10,6 +10,7 @@ export type Customer = {
   businessCardPath: string | null
   /** Short-lived signed URL, attached only where the card is actually displayed. */
   businessCardUrl?: string | null
+  isFavorite: boolean
   createdAt: string
   updatedAt: string
 }
@@ -33,6 +34,7 @@ export type CustomerRow = {
   email: string | null
   memo: string | null
   business_card_path: string | null
+  is_favorite: boolean
   created_at: string
   updated_at: string
 }
@@ -48,6 +50,7 @@ export function mapRowToCustomer(row: CustomerRow): Customer {
     email: row.email,
     memo: row.memo,
     businessCardPath: row.business_card_path,
+    isFavorite: row.is_favorite,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   }

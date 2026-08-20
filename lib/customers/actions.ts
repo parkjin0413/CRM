@@ -169,6 +169,14 @@ export async function updateCustomer(
   return { status: 'ok' }
 }
 
+export async function toggleFavorite(id: string, isFavorite: boolean): Promise<void> {
+  const supabase = getSupabaseServerClient()
+  const { error } = await supabase.from('customers').update({ is_favorite: isFavorite }).eq('id', id)
+  if (error) throw new Error(error.message)
+  revalidatePath('/')
+  revalidatePath(`/customers/${id}`)
+}
+
 export async function deleteCustomer(id: string): Promise<void> {
   const supabase = getSupabaseServerClient()
   const { data: existing } = await supabase.from('customers').select('business_card_path').eq('id', id).single()

@@ -4,15 +4,17 @@ import { useMemo, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { sortCustomers, filterCustomers, type SortField, type SortDirection } from '@/lib/customers/list'
 import { deleteCustomer } from '@/lib/customers/actions'
+import { formatPhone } from '@/lib/customers/phone'
 import type { Customer } from '@/lib/customers/types'
 import { SourceTag } from './source-tag'
 import { SourceFilterDropdown } from './source-filter-dropdown'
 import { BusinessCardPreview } from './business-card-preview'
+import { FavoriteToggle } from './favorite-toggle'
 
 const COLUMNS: { field: SortField; label: string }[] = [
   { field: 'source', label: '구분' },
-  { field: 'name', label: '이름' },
   { field: 'company', label: '소속' },
+  { field: 'name', label: '이름' },
   { field: 'phone', label: '연락처' },
   { field: 'email', label: '이메일' },
   { field: 'memo', label: '메모' },
@@ -40,7 +42,9 @@ export function CustomerListClient({
 
   const visible = useMemo(() => {
     const filtered = filterCustomers(customers, { sources: selectedSources, search })
-    return sortCustomers(filtered, sortField, sortDirection)
+    const sorted = sortCustomers(filtered, sortField, sortDirection)
+    // Stable sort: keeps the chosen sort order within each group, just floats favorites up.
+    return [...sorted].sort((a, b) => Number(b.isFavorite) - Number(a.isFavorite))
   }, [customers, selectedSources, search, sortField, sortDirection])
 
   const exportHref = useMemo(() => {
@@ -102,16 +106,24 @@ export function CustomerListClient({
             {visible.map((customer) => (
               <li key={customer.id} className="card p-4">
                 <div className="mb-2 flex items-start justify-between gap-2">
-                  <BusinessCardPreview name={customer.name} imageUrl={customer.businessCardUrl} />
-                  <SourceTag value={customer.source} />
+                  <div className="flex items-center gap-2">
+                    <FavoriteToggle id={customer.id} initialValue={customer.isFavorite} />
+                    <SourceTag value={customer.source} />
+                  </div>
+                  <Link href={`/customers/${customer.id}`} className="btn-link text-xs">
+                    상세보기
+                  </Link>
                 </div>
-                <p className="text-sm text-ink-muted">{customer.company}</p>
+                <p className="text-xs text-ink-muted">{customer.company}</p>
+                <div className="text-base">
+                  <BusinessCardPreview name={customer.name} imageUrl={customer.businessCardUrl} />
+                </div>
                 <dl className="mt-2 flex flex-col gap-1 text-sm">
                   <div className="flex gap-2">
                     <dt className="w-12 shrink-0 text-ink-muted">연락처</dt>
                     <dd>
                       <a href={`tel:${customer.phoneNormalized}`} className="btn-link font-mono">
-                        {customer.phone}
+                        {formatPhone(customer.phoneNormalized)}
                       </a>
                     </dd>
                   </div>
@@ -157,6 +169,7 @@ export function CustomerListClient({
             <table className="w-full min-w-max border-collapse text-sm">
               <thead>
                 <tr>
+                  <th className="border-b border-line px-3 py-2.5" />
                   {COLUMNS.map(({ field, label }) => (
                     <th
                       key={field}
@@ -174,15 +187,18 @@ export function CustomerListClient({
                 {visible.map((customer) => (
                   <tr key={customer.id} className="border-b border-line last:border-0 hover:bg-paper">
                     <td className="px-3 py-2.5">
-                      <SourceTag value={customer.source} />
+                      <FavoriteToggle id={customer.id} initialValue={customer.isFavorite} />
                     </td>
                     <td className="px-3 py-2.5">
-                      <BusinessCardPreview name={customer.name} imageUrl={customer.businessCardUrl} />
+                      <SourceTag value={customer.source} />
                     </td>
                     <td className="px-3 py-2.5">{customer.company}</td>
                     <td className="px-3 py-2.5">
+                      <BusinessCardPreview name={customer.name} imageUrl={customer.businessCardUrl} />
+                    </td>
+                    <td className="px-3 py-2.5">
                       <a href={`tel:${customer.phoneNormalized}`} className="btn-link font-mono text-[13px]">
-                        {customer.phone}
+                        {formatPhone(customer.phoneNormalized)}
                       </a>
                     </td>
                     <td className="px-3 py-2.5 text-ink-muted">
@@ -199,6 +215,9 @@ export function CustomerListClient({
                       {formatDate(customer.createdAt)}
                     </td>
                     <td className="whitespace-nowrap px-3 py-2.5">
+                      <Link href={`/customers/${customer.id}`} className="btn-link mr-3 text-sm">
+                        상세
+                      </Link>
                       <Link href={`/customers/${customer.id}/edit`} className="btn-link mr-3 text-sm">
                         수정
                       </Link>
