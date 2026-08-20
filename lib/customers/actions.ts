@@ -108,3 +108,49 @@ export async function deleteCustomer(id: string): Promise<void> {
   if (error) throw new Error(error.message)
   revalidatePath('/')
 }
+
+export type SourceOptionResult =
+  | { status: 'ok' }
+  | { status: 'error'; message: string }
+
+export async function addSourceOption(value: string): Promise<SourceOptionResult> {
+  const trimmed = value.trim()
+  if (!trimmed) {
+    return { status: 'error', message: '구분 값을 입력해주세요.' }
+  }
+
+  const supabase = getSupabaseServerClient()
+  const { data: last } = await supabase
+    .from('source_options')
+    .select('sort_order')
+    .order('sort_order', { ascending: false })
+    .limit(1)
+  const nextOrder = (last?.[0]?.sort_order ?? 0) + 1
+
+  const { error } = await supabase.from('source_options').insert({ value: trimmed, sort_order: nextOrder })
+  if (error) {
+    if (error.code === '23505') {
+      return { status: 'error', message: '이미 존재하는 구분 값입니다.' }
+    }
+    return { status: 'error', message: error.message }
+  }
+
+  revalidatePath('/')
+  revalidatePath('/settings/sources')
+  return { status: 'ok' }
+}
+
+export async function deleteSourceOption(value: string): Promise<SourceOptionResult> {
+  const supabase = getSupabaseServerClient()
+  const { error } = await supabase.from('source_options').delete().eq('value', value)
+  if (error) {
+    if (error.code === '23503') {
+      return { status: 'error', message: '이 구분을 사용 중인 고객이 있어 삭제할 수 없습니다.' }
+    }
+    return { status: 'error', message: error.message }
+  }
+
+  revalidatePath('/')
+  revalidatePath('/settings/sources')
+  return { status: 'ok' }
+}

@@ -22,6 +22,9 @@ export default async function HomePage() {
           <a href="/api/customers/export" className="rounded border border-gray-300 px-3 py-2 text-sm">
             엑셀 내보내기
           </a>
+          <Link href="/settings/sources" className="rounded border border-gray-300 px-3 py-2 text-sm">
+            구분 관리
+          </Link>
         </div>
       </div>
       <CustomerListClient initialCustomers={customers} sourceOptions={sourceOptions} />
