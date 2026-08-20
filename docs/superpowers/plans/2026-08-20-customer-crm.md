@@ -42,10 +42,12 @@
 Run from the repo root (`c:/Users/Windows11/Desktop/VSCODE/CRM`), scaffolding into the current directory:
 
 ```bash
-npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir=false --import-alias "@/*" --use-npm --no-turbopack
+npx create-next-app@latest . --typescript --tailwind --eslint --app --import-alias "@/*" --use-npm --disable-git --yes
 ```
 
-When prompted about the directory not being empty, choose to continue (it only contains `docs/` and `.git/`).
+`--disable-git` is used because the target directory is already inside a git repo (this plan's worktree) — `create-next-app` should not attempt to initialize its own. `--src-dir` is intentionally omitted (not passed) so the project has no `src/` directory, matching every later task's paths (`lib/...`, `components/...`, `app/...` at the repo root, not `src/...`). `--yes` accepts defaults for anything not explicitly listed (e.g., a Turbopack prompt), since only the app's own dependencies matter here, not the specific default it picks for unlisted options.
+
+If prompted anyway about the directory not being empty, choose to continue (it only contains `docs/` and `.git/`).
 
 - [ ] **Step 2: Verify the dev server boots**
 
