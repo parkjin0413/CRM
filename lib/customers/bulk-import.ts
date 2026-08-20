@@ -4,16 +4,13 @@ import * as XLSX from 'xlsx'
 import { revalidatePath } from 'next/cache'
 import { getSupabaseServerClient } from '@/lib/supabase/server-client'
 import { getSourceOptions, getCustomers } from './actions'
-import { parseCustomerRows, type ParseIssue } from './excel'
+import { parseCustomerRows, type ParseResult } from './excel'
 import { normalizePhone } from './phone'
+import type { CustomerInput } from './types'
 
-export type BulkImportResult = {
-  insertedCount: number
-  duplicates: ParseIssue[]
-  errors: ParseIssue[]
-}
+export type { ParseResult, ParseIssue, ParsedRow } from './excel'
 
-export async function bulkImportCustomers(formData: FormData): Promise<BulkImportResult> {
+export async function parseImportFile(formData: FormData): Promise<ParseResult> {
   const file = formData.get('file')
   if (!(file instanceof File)) {
     throw new Error('업로드할 파일이 없습니다.')
@@ -24,15 +21,23 @@ export async function bulkImportCustomers(formData: FormData): Promise<BulkImpor
 
   const buffer = await file.arrayBuffer()
   const workbook = XLSX.read(buffer, { type: 'array' })
-  const { valid, duplicates, errors } = parseCustomerRows(workbook, sourceOptions, existingPhones)
+  return parseCustomerRows(workbook, sourceOptions, existingPhones)
+}
 
-  if (valid.length === 0) {
-    return { insertedCount: 0, duplicates, errors }
+export type CommitImportResult = {
+  insertedCount: number
+}
+
+export async function commitImportRows(rows: CustomerInput[]): Promise<CommitImportResult> {
+  if (rows.length === 0) {
+    return { insertedCount: 0 }
   }
 
   const supabase = getSupabaseServerClient()
-  const { error } = await supabase.from('customers').insert(
-    valid.map(({ input }) => ({
+  let insertedCount = 0
+
+  for (const input of rows) {
+    const { error } = await supabase.from('customers').insert({
       source: input.source,
       name: input.name,
       company: input.company,
@@ -40,11 +45,13 @@ export async function bulkImportCustomers(formData: FormData): Promise<BulkImpor
       phone_normalized: normalizePhone(input.phone),
       email: input.email || null,
       memo: input.memo || null,
-    }))
-  )
-  if (error) throw new Error(error.message)
+    })
+    if (!error) {
+      insertedCount += 1
+    }
+  }
 
   revalidatePath('/')
 
-  return { insertedCount: valid.length, duplicates, errors }
+  return { insertedCount }
 }

@@ -53,6 +53,19 @@ export function parseCustomerRows(
     header: 1,
     blankrows: false,
   })
+
+  const headerRow = (rows[0] ?? []).map((cell) => (cell ?? '').toString().trim())
+  const headerMatches =
+    headerRow.length === EXCEL_HEADERS.length &&
+    (EXCEL_HEADERS as readonly string[]).every((expected, i) => headerRow[i] === expected)
+  if (!headerMatches) {
+    return {
+      valid: [],
+      duplicates: [],
+      errors: [{ rowNumber: 1, reason: '양식의 열 순서가 올바르지 않습니다. 다운로드한 양식을 사용해주세요.' }],
+    }
+  }
+
   const dataRows = rows.slice(1)
 
   const valid: ParsedRow[] = []

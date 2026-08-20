@@ -92,6 +92,19 @@ describe('parseCustomerRows', () => {
     expect(result.duplicates).toEqual([{ rowNumber: 2, reason: '이미 등록된 연락처입니다.' }])
   })
 
+  it('reports an error and no rows when the header row does not match the expected columns', () => {
+    const wb = workbookFromRows([
+      ['이름', '구분', '소속', '연락처', '이메일', '메모'],
+      ['홍길동', '지인소개', 'A사', '010-1111-1111', '', ''],
+    ])
+    const result = parseCustomerRows(wb, validSources, new Set())
+    expect(result.valid).toHaveLength(0)
+    expect(result.duplicates).toHaveLength(0)
+    expect(result.errors).toEqual([
+      { rowNumber: 1, reason: '양식의 열 순서가 올바르지 않습니다. 다운로드한 양식을 사용해주세요.' },
+    ])
+  })
+
   it('reports the second occurrence of a phone repeated within the file as a duplicate', () => {
     const wb = workbookFromRows([
       [...EXCEL_HEADERS],
