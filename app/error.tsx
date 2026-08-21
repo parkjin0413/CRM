@@ -2,6 +2,17 @@
 
 import { useEffect } from 'react'
 
+const RELOAD_GUARD_KEY = 'crm-chunk-reload-guard'
+
+function isStaleDeployError(error: Error) {
+  return (
+    /ChunkLoadError/i.test(error.name) ||
+    /loading chunk [\d]+ failed/i.test(error.message) ||
+    /failed to fetch dynamically imported module/i.test(error.message) ||
+    /failed to import/i.test(error.message)
+  )
+}
+
 export default function Error({
   error,
   reset,
@@ -11,6 +22,28 @@ export default function Error({
 }) {
   useEffect(() => {
     console.error(error)
+
+    if (!isStaleDeployError(error)) return
+
+    // A new deploy while this tab was open leaves it holding JS chunk
+    // references the server no longer has. reset() only re-renders — it
+    // can't fetch the new chunks — so a full reload is the actual fix.
+    // Guarded to once per tab session so a genuinely broken deploy falls
+    // back to the button instead of reload-looping.
+    let alreadyReloaded = false
+    try {
+      alreadyReloaded = sessionStorage.getItem(RELOAD_GUARD_KEY) === '1'
+    } catch {
+      // sessionStorage unavailable (private mode, etc.) — fall back to manual retry.
+    }
+    if (alreadyReloaded) return
+
+    try {
+      sessionStorage.setItem(RELOAD_GUARD_KEY, '1')
+    } catch {
+      return
+    }
+    window.location.reload()
   }, [error])
 
   return (
