@@ -88,7 +88,11 @@ export function ContactLogSection({
         </button>
       </div>
 
-      {error && <p className="text-sm text-stamp">{error}</p>}
+      {error && (
+        <p role="alert" className="text-sm text-stamp">
+          {error}
+        </p>
+      )}
 
       {logs.length === 0 ? (
         <p className="text-sm text-ink-muted">아직 연락 기록이 없습니다.</p>
@@ -111,7 +115,7 @@ export function ContactLogSection({
                 type="button"
                 onClick={() => handleDelete(log.id)}
                 disabled={isPending}
-                className="shrink-0 text-xs text-stamp hover:underline"
+                className="inline-flex min-h-6 shrink-0 items-center text-xs text-stamp hover:underline"
               >
                 삭제
               </button>

@@ -42,3 +42,7 @@ next-env.d.ts
 
 # superpowers task tracking (internal development)
 .superpowers/
+
+# local agent tooling (Claude Code skills/config, Serena) - not part of the app
+.claude/
+.serena/

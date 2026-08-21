@@ -1,11 +1,18 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useState, useTransition } from 'react'
+import { useEffect, useRef, useState, useTransition } from 'react'
 import { createCustomer, updateCustomer } from '@/lib/customers/actions'
 import type { Customer, CustomerInput } from '@/lib/customers/types'
 import { SourceTag } from './source-tag'
 import { BusinessCardUpload } from './business-card-upload'
+
+const FIELD_LABELS: Record<string, string> = {
+  source: '구분',
+  name: '이름',
+  company: '소속(회사)',
+  phone: '연락처',
+}
 
 export function CustomerForm({
   mode,
@@ -30,6 +37,13 @@ export function CustomerForm({
   const [isPending, startTransition] = useTransition()
   const [businessCardFile, setBusinessCardFile] = useState<File | null>(null)
   const [removeBusinessCard, setRemoveBusinessCard] = useState(false)
+  const errorSummaryRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (Object.keys(fieldErrors).length > 0) {
+      errorSummaryRef.current?.focus()
+    }
+  }, [fieldErrors])
 
   function update<K extends keyof CustomerInput>(key: K, value: CustomerInput[K]) {
     setValues((prev) => ({ ...prev, [key]: value }))
@@ -71,6 +85,8 @@ export function CustomerForm({
     })
   }
 
+  const errorFields = Object.keys(fieldErrors)
+
   return (
     <form
       onSubmit={(e) => {
@@ -79,14 +95,37 @@ export function CustomerForm({
       }}
       className="card flex max-w-md flex-col gap-4 p-6"
     >
+      {errorFields.length > 0 && (
+        <div
+          ref={errorSummaryRef}
+          role="alert"
+          tabIndex={-1}
+          className="rounded-md border border-stamp/30 bg-stamp-bg p-3 text-sm"
+        >
+          <p className="font-medium text-ink">입력값을 확인해주세요</p>
+          <ul className="mt-1 list-disc pl-5 text-stamp">
+            {errorFields.map((field) => (
+              <li key={field}>
+                <a href={`#field-${field}`} className="underline">
+                  {fieldErrors[field]}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       <label className="flex flex-col gap-1.5 text-sm">
         <span className="font-medium text-ink">
-          구분 <span className="text-stamp">*</span>
+          {FIELD_LABELS.source} <span className="text-stamp">*</span>
         </span>
         <div className="flex items-center gap-2.5">
           <select
+            id="field-source"
             value={values.source}
             onChange={(e) => update('source', e.target.value)}
+            aria-invalid={!!fieldErrors.source}
+            aria-describedby={fieldErrors.source ? 'field-source-error' : undefined}
             className="input"
           >
             {sourceOptions.map((s) => (
@@ -97,31 +136,68 @@ export function CustomerForm({
           </select>
           {values.source && <SourceTag value={values.source} />}
         </div>
-        {fieldErrors.source && <span className="text-xs text-stamp">{fieldErrors.source}</span>}
+        {fieldErrors.source && (
+          <span id="field-source-error" className="text-xs text-stamp">
+            {fieldErrors.source}
+          </span>
+        )}
       </label>
 
       <label className="flex flex-col gap-1.5 text-sm">
         <span className="font-medium text-ink">
-          이름 <span className="text-stamp">*</span>
+          {FIELD_LABELS.name} <span className="text-stamp">*</span>
         </span>
-        <input value={values.name} onChange={(e) => update('name', e.target.value)} className="input" />
-        {fieldErrors.name && <span className="text-xs text-stamp">{fieldErrors.name}</span>}
+        <input
+          id="field-name"
+          value={values.name}
+          onChange={(e) => update('name', e.target.value)}
+          aria-invalid={!!fieldErrors.name}
+          aria-describedby={fieldErrors.name ? 'field-name-error' : undefined}
+          className="input"
+        />
+        {fieldErrors.name && (
+          <span id="field-name-error" className="text-xs text-stamp">
+            {fieldErrors.name}
+          </span>
+        )}
       </label>
 
       <label className="flex flex-col gap-1.5 text-sm">
         <span className="font-medium text-ink">
-          소속(회사) <span className="text-stamp">*</span>
+          {FIELD_LABELS.company} <span className="text-stamp">*</span>
         </span>
-        <input value={values.company} onChange={(e) => update('company', e.target.value)} className="input" />
-        {fieldErrors.company && <span className="text-xs text-stamp">{fieldErrors.company}</span>}
+        <input
+          id="field-company"
+          value={values.company}
+          onChange={(e) => update('company', e.target.value)}
+          aria-invalid={!!fieldErrors.company}
+          aria-describedby={fieldErrors.company ? 'field-company-error' : undefined}
+          className="input"
+        />
+        {fieldErrors.company && (
+          <span id="field-company-error" className="text-xs text-stamp">
+            {fieldErrors.company}
+          </span>
+        )}
       </label>
 
       <label className="flex flex-col gap-1.5 text-sm">
         <span className="font-medium text-ink">
-          연락처 <span className="text-stamp">*</span>
+          {FIELD_LABELS.phone} <span className="text-stamp">*</span>
         </span>
-        <input value={values.phone} onChange={(e) => update('phone', e.target.value)} className="input font-mono" />
-        {fieldErrors.phone && <span className="text-xs text-stamp">{fieldErrors.phone}</span>}
+        <input
+          id="field-phone"
+          value={values.phone}
+          onChange={(e) => update('phone', e.target.value)}
+          aria-invalid={!!fieldErrors.phone}
+          aria-describedby={fieldErrors.phone ? 'field-phone-error' : undefined}
+          className="input font-mono"
+        />
+        {fieldErrors.phone && (
+          <span id="field-phone-error" className="text-xs text-stamp">
+            {fieldErrors.phone}
+          </span>
+        )}
       </label>
 
       <label className="flex flex-col gap-1.5 text-sm">
@@ -143,7 +219,7 @@ export function CustomerForm({
       />
 
       {duplicate && (
-        <div className="rounded-md border border-stamp/30 bg-stamp-bg p-3 text-sm text-ink">
+        <div role="alert" className="rounded-md border border-stamp/30 bg-stamp-bg p-3 text-sm text-ink">
           <p>
             이미 등록된 연락처입니다: {duplicate.name} ({duplicate.company})
           </p>
@@ -153,7 +229,11 @@ export function CustomerForm({
         </div>
       )}
 
-      {error && <p className="text-sm text-stamp">{error}</p>}
+      {error && (
+        <p role="alert" className="text-sm text-stamp">
+          {error}
+        </p>
+      )}
 
       <button type="submit" disabled={isPending} className="btn-primary">
         {mode === 'create' ? '등록' : '저장'}

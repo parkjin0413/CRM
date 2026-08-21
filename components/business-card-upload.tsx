@@ -75,7 +75,11 @@ export function BusinessCardUpload({
           />
         </label>
       )}
-      {error && <span className="text-xs text-stamp">{error}</span>}
+      {error && (
+        <span role="alert" className="text-xs text-stamp">
+          {error}
+        </span>
+      )}
     </div>
   )
 }

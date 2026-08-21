@@ -162,7 +162,11 @@ export function CustomerListClient({
         />
       )}
 
-      {error && <p className="mb-3 text-sm text-stamp">{error}</p>}
+      {error && (
+        <p role="alert" className="mb-3 text-sm text-stamp">
+          {error}
+        </p>
+      )}
 
       {visible.length === 0 && (
         <div className="card px-3 py-10 text-center text-sm text-ink-muted">표시할 고객이 없습니다.</div>
@@ -200,7 +204,7 @@ export function CustomerListClient({
                     <FavoriteToggle id={customer.id} initialValue={customer.isFavorite} onToggle={(v) => handleFavoriteChange(customer.id, v)} />
                     <SourceTag value={customer.source} />
                   </div>
-                  <Link href={`/customers/${customer.id}`} className="btn-link text-xs">
+                  <Link href={`/customers/${customer.id}`} className="btn-link inline-flex min-h-6 items-center text-xs">
                     상세보기
                   </Link>
                 </div>
@@ -245,13 +249,13 @@ export function CustomerListClient({
                   </div>
                 </dl>
                 <div className="mt-3 flex gap-3 border-t border-line pt-3">
-                  <Link href={`/customers/${customer.id}/edit`} className="btn-link text-sm">
+                  <Link href={`/customers/${customer.id}/edit`} className="btn-link inline-flex min-h-6 items-center text-sm">
                     수정
                   </Link>
                   <button
                     onClick={() => handleDelete(customer.id)}
                     disabled={isPending}
-                    className="text-sm text-stamp hover:underline"
+                    className="inline-flex min-h-6 items-center text-sm text-stamp hover:underline"
                   >
                     삭제
                   </button>
@@ -353,16 +357,16 @@ export function CustomerListClient({
                       <ContactHistoryPreview label={lastContactLabel(customer)} logs={customer.recentContactLogs} />
                     </td>
                     <td className="whitespace-nowrap px-2.5 py-2.5">
-                      <Link href={`/customers/${customer.id}`} className="btn-link mr-2 text-sm">
+                      <Link href={`/customers/${customer.id}`} className="btn-link mr-2 inline-flex min-h-6 items-center text-sm">
                         상세
                       </Link>
-                      <Link href={`/customers/${customer.id}/edit`} className="btn-link mr-2 text-sm">
+                      <Link href={`/customers/${customer.id}/edit`} className="btn-link mr-2 inline-flex min-h-6 items-center text-sm">
                         수정
                       </Link>
                       <button
                         onClick={() => handleDelete(customer.id)}
                         disabled={isPending}
-                        className="text-sm text-stamp hover:underline"
+                        className="inline-flex min-h-6 items-center text-sm text-stamp hover:underline"
                       >
                         삭제
                       </button>

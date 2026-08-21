@@ -92,7 +92,7 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
         <ContactLogSection customerId={customer.id} initialLogs={logs} />
       </div>
 
-      <Link href="/" className="btn-link mt-4 inline-block text-sm">
+      <Link href="/" className="btn-link mt-4 inline-flex min-h-6 items-center text-sm">
         ← 목록으로
       </Link>
     </main>

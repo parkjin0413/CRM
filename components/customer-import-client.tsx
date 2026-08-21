@@ -62,7 +62,11 @@ export function CustomerImportClient() {
         업로드 및 미리보기
       </button>
 
-      {error && <p className="text-sm text-stamp">{error}</p>}
+      {error && (
+        <p role="alert" className="text-sm text-stamp">
+          {error}
+        </p>
+      )}
 
       {result && insertedCount === null && (
         <div className="rounded-md border border-line bg-paper p-3 text-sm">

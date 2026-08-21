@@ -27,7 +27,11 @@ export function DeleteCustomerButton({ id }: { id: string }) {
       <button type="button" onClick={handleDelete} disabled={isPending} className="btn-danger">
         삭제
       </button>
-      {error && <span className="text-xs text-stamp">{error}</span>}
+      {error && (
+        <span role="alert" className="text-xs text-stamp">
+          {error}
+        </span>
+      )}
     </div>
   )
 }

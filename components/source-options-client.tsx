@@ -42,7 +42,11 @@ export function SourceOptionsClient({ initialOptions }: { initialOptions: string
         {options.map((option) => (
           <li key={option} className="flex items-center justify-between rounded-md border border-line bg-paper px-3 py-2">
             <SourceTag value={option} />
-            <button onClick={() => handleDelete(option)} disabled={isPending} className="text-sm text-stamp hover:underline">
+            <button
+              onClick={() => handleDelete(option)}
+              disabled={isPending}
+              className="inline-flex min-h-6 items-center text-sm text-stamp hover:underline"
+            >
               삭제
             </button>
           </li>
@@ -60,7 +64,11 @@ export function SourceOptionsClient({ initialOptions }: { initialOptions: string
           추가
         </button>
       </div>
-      {error && <p className="mt-2 text-sm text-stamp">{error}</p>}
+      {error && (
+        <p role="alert" className="mt-2 text-sm text-stamp">
+          {error}
+        </p>
+      )}
     </div>
   )
 }

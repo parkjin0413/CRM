@@ -154,7 +154,11 @@ export function BulkActionsBar({
         </button>
       </div>
 
-      {error && <p className="text-sm text-stamp">{error}</p>}
+      {error && (
+        <p role="alert" className="text-sm text-stamp">
+          {error}
+        </p>
+      )}
     </div>
   )
 }

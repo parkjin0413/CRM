@@ -18,7 +18,11 @@ export default async function LoginPage({
         <button type="submit" className="btn-primary">
           입장
         </button>
-        {error && <p className="text-sm text-stamp">비밀번호가 올바르지 않습니다.</p>}
+        {error && (
+          <p role="alert" className="text-sm text-stamp">
+            비밀번호가 올바르지 않습니다.
+          </p>
+        )}
       </form>
     </main>
   )

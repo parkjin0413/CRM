@@ -39,7 +39,7 @@ export function FavoriteToggle({
       disabled={isPending}
       aria-pressed={isFavorite}
       aria-label={isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가'}
-      className="text-lg leading-none disabled:opacity-50"
+      className="flex h-6 w-6 items-center justify-center text-lg leading-none disabled:opacity-50"
     >
       <span aria-hidden className={isFavorite ? 'text-favorite' : 'text-ink-muted'}>
         {isFavorite ? '★' : '☆'}
