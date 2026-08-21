@@ -267,7 +267,7 @@ export function CustomerListClient({
           {/* Desktop / tablet: full table. */}
           <div className="card hidden overflow-x-auto sm:block">
             <table className="w-full min-w-max border-collapse text-sm">
-              <thead>
+              <thead className="bg-paper">
                 <tr>
                   <th className="border-b border-line py-2 pl-3 pr-1.5">
                     <input

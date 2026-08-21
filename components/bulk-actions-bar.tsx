@@ -82,7 +82,7 @@ export function BulkActionsBar({
   }
 
   return (
-    <div className="card sticky top-4 z-10 mb-4 flex flex-col gap-3 p-3">
+    <div className="card sticky top-4 z-10 mb-4 flex flex-col gap-3 p-3 shadow-[var(--shadow-md)]">
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium text-ink">{selectedIds.length}명 선택됨</p>
         <div className="flex items-center gap-3">

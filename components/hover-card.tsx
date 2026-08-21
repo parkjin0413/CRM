@@ -58,7 +58,7 @@ export function HoverCard({
             ref={refs.setFloating}
             style={floatingStyles}
             {...getFloatingProps()}
-            className={panelClassName ?? 'card z-50 p-3'}
+            className={panelClassName ?? 'card z-50 p-3 shadow-[var(--shadow-lg)]'}
           >
             {panel}
           </div>

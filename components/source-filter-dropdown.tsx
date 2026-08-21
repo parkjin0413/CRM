@@ -61,7 +61,7 @@ export function SourceFilterDropdown({
         <div
           role="listbox"
           aria-multiselectable="true"
-          className="card absolute z-10 mt-1.5 w-60 p-2"
+          className="card absolute z-10 mt-1.5 w-60 p-2 shadow-[var(--shadow-lg)]"
         >
           <div className="flex items-center justify-between px-1.5 pb-1.5 text-xs text-ink-muted">
             <span>{options.length}개 항목</span>
