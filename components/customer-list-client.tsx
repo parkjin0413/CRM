@@ -17,6 +17,10 @@ import { BulkActionsBar } from './bulk-actions-bar'
 
 type ListSortField = SortField | 'contactCount' | 'favorite'
 
+// 25 balances a readable desktop table against the taller mobile card layout,
+// where 50 rows would mean a very long scroll per page.
+const PAGE_SIZE = 25
+
 const COLUMNS: { field: SortField; label: string }[] = [
   { field: 'source', label: '구분' },
   { field: 'company', label: '소속' },
@@ -50,6 +54,7 @@ export function CustomerListClient({
   const [search, setSearch] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [page, setPage] = useState(1)
   const [isPending, startTransition] = useTransition()
 
   const visible = useMemo(() => {
@@ -68,6 +73,25 @@ export function CustomerListClient({
     }
     return sortCustomers(filtered, sortField, sortDirection)
   }, [customers, selectedSources, search, sortField, sortDirection])
+
+  // A new filter/sort should always land on page 1 of the new results. Adjusting
+  // state during render (React's sanctioned escape hatch for this) instead of an
+  // effect avoids an extra render pass showing the stale page first.
+  const filterSignature = `${selectedSources.join(',')}|${search}|${sortField}|${sortDirection}`
+  const [prevFilterSignature, setPrevFilterSignature] = useState(filterSignature)
+  if (filterSignature !== prevFilterSignature) {
+    setPrevFilterSignature(filterSignature)
+    setPage(1)
+  }
+
+  const pageCount = Math.max(1, Math.ceil(visible.length / PAGE_SIZE))
+  // Pure clamp (no state write) so a shrinking result set — e.g. a delete —
+  // never strands the view on a now-empty trailing page.
+  const currentPage = Math.min(page, pageCount)
+  const pagedVisible = useMemo(
+    () => visible.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE),
+    [visible, currentPage]
+  )
 
   const exportHref = useMemo(() => {
     const params = new URLSearchParams()
@@ -185,11 +209,11 @@ export function CustomerListClient({
             전체 선택 ({visible.length})
           </label>
           <ul className="flex flex-col gap-3 sm:hidden">
-            {visible.map((customer) => (
+            {pagedVisible.map((customer) => (
               <li
                 key={customer.id}
-                className={`card border-l-4 p-4 ${
-                  customer.isFavorite ? 'border-l-favorite bg-favorite-bg' : 'border-l-transparent'
+                className={`card border-l-2 p-4 ${
+                  customer.isFavorite ? 'border-l-favorite' : 'border-l-transparent'
                 }`}
               >
                 <div className="mb-2 flex items-start justify-between gap-2">
@@ -305,15 +329,10 @@ export function CustomerListClient({
                 </tr>
               </thead>
               <tbody>
-                {visible.map((customer) => (
-                  <tr
-                    key={customer.id}
-                    className={`border-b border-line last:border-0 ${
-                      customer.isFavorite ? 'bg-favorite-bg' : 'hover:bg-paper'
-                    }`}
-                  >
+                {pagedVisible.map((customer) => (
+                  <tr key={customer.id} className="border-b border-line last:border-0 hover:bg-paper">
                     <td
-                      className={`border-l-4 py-2.5 pl-2 pr-1.5 ${
+                      className={`border-l-2 py-2.5 pl-2.5 pr-1.5 ${
                         customer.isFavorite ? 'border-l-favorite' : 'border-l-transparent'
                       }`}
                     >
@@ -376,6 +395,30 @@ export function CustomerListClient({
               </tbody>
             </table>
           </div>
+
+          {pageCount > 1 && (
+            <nav aria-label="목록 페이지" className="mt-4 flex items-center justify-center gap-3 text-sm">
+              <button
+                type="button"
+                onClick={() => setPage(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+                className="btn-secondary px-3 py-1.5 disabled:opacity-40"
+              >
+                이전
+              </button>
+              <span className="text-ink-muted">
+                {currentPage} / {pageCount} 페이지 · 총 {visible.length}명
+              </span>
+              <button
+                type="button"
+                onClick={() => setPage(Math.min(pageCount, currentPage + 1))}
+                disabled={currentPage === pageCount}
+                className="btn-secondary px-3 py-1.5 disabled:opacity-40"
+              >
+                다음
+              </button>
+            </nav>
+          )}
         </>
       )}
     </div>

@@ -13,8 +13,8 @@
   --line: #e2dccd;
   --stamp: #a6402e;
   --stamp-bg: #f3e1dc;
-  --favorite: #c9a24b;
-  --favorite-bg: #f5e6b8;
+  /* Deep antique bronze-gold, not bright yellow — 5.9:1 on white, 5.5:1 on paper. */
+  --favorite: #7d6029;
   /* Sampled from the KANGSAN mark (logo2.png) — decorative signature only, never text (2.7:1 on white). */
   --brand-green: #6fae3a;
   --brand-blue: #a9cdee;
@@ -38,7 +38,6 @@
   --color-stamp: var(--stamp);
   --color-stamp-bg: var(--stamp-bg);
   --color-favorite: var(--favorite);
-  --color-favorite-bg: var(--favorite-bg);
   --color-brand-green: var(--brand-green);
   --color-brand-blue: var(--brand-blue);
   --color-brand-green-text: var(--brand-green-text);
