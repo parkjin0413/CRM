@@ -11,6 +11,8 @@
   --line: #e2dccd;
   --stamp: #a6402e;
   --stamp-bg: #f3e1dc;
+  --favorite: #c9a24b;
+  --favorite-bg: #f5e6b8;
 }
 
 @theme inline {
@@ -23,6 +25,8 @@
   --color-line: var(--line);
   --color-stamp: var(--stamp);
   --color-stamp-bg: var(--stamp-bg);
+  --color-favorite: var(--favorite);
+  --color-favorite-bg: var(--favorite-bg);
   --font-sans: var(--font-pretendard);
   --font-mono: var(--font-plex-mono);
 }

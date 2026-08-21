@@ -178,7 +178,12 @@ export function CustomerListClient({
           </label>
           <ul className="flex flex-col gap-3 sm:hidden">
             {visible.map((customer) => (
-              <li key={customer.id} className="card p-4">
+              <li
+                key={customer.id}
+                className={`card border-l-4 p-4 ${
+                  customer.isFavorite ? 'border-l-favorite bg-favorite-bg' : 'border-l-transparent'
+                }`}
+              >
                 <div className="mb-2 flex items-start justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <input
@@ -293,8 +298,17 @@ export function CustomerListClient({
               </thead>
               <tbody>
                 {visible.map((customer) => (
-                  <tr key={customer.id} className="border-b border-line last:border-0 hover:bg-paper">
-                    <td className="py-2.5 pl-3 pr-1.5">
+                  <tr
+                    key={customer.id}
+                    className={`border-b border-line last:border-0 ${
+                      customer.isFavorite ? 'bg-favorite-bg' : 'hover:bg-paper'
+                    }`}
+                  >
+                    <td
+                      className={`border-l-4 py-2.5 pl-2 pr-1.5 ${
+                        customer.isFavorite ? 'border-l-favorite' : 'border-l-transparent'
+                      }`}
+                    >
                       <input
                         type="checkbox"
                         checked={selectedIds.has(customer.id)}

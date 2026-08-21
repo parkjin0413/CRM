@@ -30,7 +30,7 @@ export function FavoriteToggle({ id, initialValue }: { id: string; initialValue:
       aria-label={isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가'}
       className="text-lg leading-none disabled:opacity-50"
     >
-      <span aria-hidden className={isFavorite ? 'text-[#c9a24b]' : 'text-ink-muted'}>
+      <span aria-hidden className={isFavorite ? 'text-favorite' : 'text-ink-muted'}>
         {isFavorite ? '★' : '☆'}
       </span>
     </button>
