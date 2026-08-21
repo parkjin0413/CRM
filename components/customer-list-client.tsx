@@ -15,7 +15,7 @@ import { ContactHistoryPreview } from './contact-history-preview'
 import { FavoriteToggle } from './favorite-toggle'
 import { BulkActionsBar } from './bulk-actions-bar'
 
-type ListSortField = SortField | 'contactCount'
+type ListSortField = SortField | 'contactCount' | 'favorite'
 
 const COLUMNS: { field: SortField; label: string }[] = [
   { field: 'source', label: '구분' },
@@ -57,6 +57,12 @@ export function CustomerListClient({
     if (sortField === 'contactCount') {
       return [...filtered].sort((a, b) => {
         const diff = (a.contactCount ?? 0) - (b.contactCount ?? 0)
+        return sortDirection === 'asc' ? diff : -diff
+      })
+    }
+    if (sortField === 'favorite') {
+      return [...filtered].sort((a, b) => {
+        const diff = Number(a.isFavorite) - Number(b.isFavorite)
         return sortDirection === 'asc' ? diff : -diff
       })
     }
@@ -259,7 +265,12 @@ export function CustomerListClient({
                       aria-label="현재 목록 전체 선택"
                     />
                   </th>
-                  <th className="border-b border-line px-1.5 py-2" />
+                  <th
+                    onClick={() => toggleSort('favorite')}
+                    className="cursor-pointer whitespace-nowrap border-b border-line px-1.5 py-2 text-left text-xs font-medium text-ink-muted hover:text-ink"
+                  >
+                    ★{sortField === 'favorite' ? (sortDirection === 'asc' ? ' ▲' : ' ▼') : ''}
+                  </th>
                   {COLUMNS.map(({ field, label }) => (
                     <th
                       key={field}

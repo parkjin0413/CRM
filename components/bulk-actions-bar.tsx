@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { addContactLogBulk } from '@/lib/customers/contact-log-actions'
-import { updateSourceBulk, deleteCustomerBulk } from '@/lib/customers/actions'
+import { updateSourceBulk, updateFavoriteBulk, deleteCustomerBulk } from '@/lib/customers/actions'
 import { CONTACT_METHODS } from '@/lib/customers/contact-log'
 
 function todayLocalDate() {
@@ -38,6 +38,18 @@ export function BulkActionsBar({
         onDone()
       } catch (e) {
         setError(e instanceof Error ? e.message : '일괄 기록 중 오류가 발생했습니다.')
+      }
+    })
+  }
+
+  function handleSetFavorite(value: boolean) {
+    setError(null)
+    startTransition(async () => {
+      try {
+        await updateFavoriteBulk(selectedIds, value)
+        onDone()
+      } catch (e) {
+        setError(e instanceof Error ? e.message : '일괄 변경 중 오류가 발생했습니다.')
       }
     })
   }
@@ -115,6 +127,16 @@ export function BulkActionsBar({
         </label>
         <button type="button" onClick={handleAddContactLog} disabled={isPending} className="btn-primary">
           기록 추가
+        </button>
+      </div>
+
+      <div className="flex flex-wrap items-end gap-2 border-t border-line pt-3">
+        <span className="w-full text-xs font-medium text-ink-muted sm:w-auto sm:self-center">즐겨찾기 일괄 변경</span>
+        <button type="button" onClick={() => handleSetFavorite(true)} disabled={isPending} className="btn-secondary">
+          ★ 즐겨찾기 추가
+        </button>
+        <button type="button" onClick={() => handleSetFavorite(false)} disabled={isPending} className="btn-secondary">
+          ☆ 즐겨찾기 해제
         </button>
       </div>
 

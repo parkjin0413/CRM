@@ -186,6 +186,15 @@ export async function updateSourceBulk(customerIds: string[], newSource: string)
   return { count: customerIds.length }
 }
 
+export async function updateFavoriteBulk(customerIds: string[], isFavorite: boolean): Promise<{ count: number }> {
+  if (customerIds.length === 0) return { count: 0 }
+  const supabase = getSupabaseServerClient()
+  const { error } = await supabase.from('customers').update({ is_favorite: isFavorite }).in('id', customerIds)
+  if (error) throw new Error(error.message)
+  revalidatePath('/')
+  return { count: customerIds.length }
+}
+
 export async function deleteCustomer(id: string): Promise<void> {
   const supabase = getSupabaseServerClient()
   const { data: existing } = await supabase.from('customers').select('business_card_path').eq('id', id).single()
