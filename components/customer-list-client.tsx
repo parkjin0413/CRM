@@ -115,6 +115,10 @@ export function CustomerListClient({
     router.refresh()
   }
 
+  function handleFavoriteChange(id: string, isFavorite: boolean) {
+    setCustomers((prev) => prev.map((c) => (c.id === id ? { ...c, isFavorite } : c)))
+  }
+
   function handleDelete(id: string) {
     if (!confirm('이 고객 정보를 삭제할까요?')) return
     setError(null)
@@ -193,7 +197,7 @@ export function CustomerListClient({
                       className="accent-accent"
                       aria-label={`${customer.name} 선택`}
                     />
-                    <FavoriteToggle id={customer.id} initialValue={customer.isFavorite} />
+                    <FavoriteToggle id={customer.id} initialValue={customer.isFavorite} onToggle={(v) => handleFavoriteChange(customer.id, v)} />
                     <SourceTag value={customer.source} />
                   </div>
                   <Link href={`/customers/${customer.id}`} className="btn-link text-xs">
@@ -318,7 +322,7 @@ export function CustomerListClient({
                       />
                     </td>
                     <td className="px-1.5 py-2.5">
-                      <FavoriteToggle id={customer.id} initialValue={customer.isFavorite} />
+                      <FavoriteToggle id={customer.id} initialValue={customer.isFavorite} onToggle={(v) => handleFavoriteChange(customer.id, v)} />
                     </td>
                     <td className="px-2.5 py-2.5">
                       <SourceTag value={customer.source} />

@@ -3,7 +3,16 @@
 import { useState, useTransition } from 'react'
 import { toggleFavorite } from '@/lib/customers/actions'
 
-export function FavoriteToggle({ id, initialValue }: { id: string; initialValue: boolean }) {
+export function FavoriteToggle({
+  id,
+  initialValue,
+  onToggle,
+}: {
+  id: string
+  initialValue: boolean
+  /** Notifies a parent that owns a copy of this value (e.g. for row styling) so it can stay in sync. */
+  onToggle?: (isFavorite: boolean) => void
+}) {
   const [isFavorite, setIsFavorite] = useState(initialValue)
   const [isPending, startTransition] = useTransition()
 
@@ -12,11 +21,13 @@ export function FavoriteToggle({ id, initialValue }: { id: string; initialValue:
     e.stopPropagation()
     const next = !isFavorite
     setIsFavorite(next)
+    onToggle?.(next)
     startTransition(async () => {
       try {
         await toggleFavorite(id, next)
       } catch {
         setIsFavorite(!next)
+        onToggle?.(!next)
       }
     })
   }
