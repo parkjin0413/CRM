@@ -29,6 +29,9 @@ export default async function HomePage() {
             <Link href="/settings/sources" className="btn-secondary">
               구분 관리
             </Link>
+            <Link href="/dashboard" className="btn-secondary">
+              통계
+            </Link>
           </>
         }
       />
