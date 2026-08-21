@@ -5,6 +5,7 @@ import { formatRelativeDays } from '@/lib/customers/relative-time'
 import { colorForIndex } from '@/lib/dashboard/chart-colors'
 import { AppHeader } from '@/components/app-header'
 import { StatTile } from '@/components/dashboard/stat-tile'
+import { DonutChart } from '@/components/dashboard/donut-chart'
 import { BarChart } from '@/components/dashboard/bar-chart'
 import { LineChart } from '@/components/dashboard/line-chart'
 import { ActionList } from '@/components/dashboard/action-list'
@@ -35,7 +36,7 @@ export default async function DashboardPage() {
   const lineData = stats.monthlyContacts.map((m) => ({ label: formatMonthLabel(m.month), value: m.count }))
 
   return (
-    <main className="mx-auto max-w-5xl p-6">
+    <main className="mx-auto max-w-6xl p-6">
       <AppHeader title="통계 대시보드" />
 
       <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -50,9 +51,9 @@ export default async function DashboardPage() {
         <StatTile label="미접촉 고객 수" value={stats.uncontactedCount} />
       </div>
 
-      <div className="mb-4 grid gap-4 sm:grid-cols-2">
+      <div className="mb-4 grid gap-4 lg:grid-cols-2">
         <div className="card p-4">
-          <BarChart title="구분별 고객 분포" data={sourceData} />
+          <DonutChart title="구분별 고객 분포" data={sourceData} />
         </div>
         <div className="card p-4">
           <BarChart title="연락 방법별 분포" data={methodData} />
